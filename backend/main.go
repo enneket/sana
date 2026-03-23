@@ -453,9 +453,8 @@ func handleDeleteNote(w http.ResponseWriter, r *http.Request) {
 // --- Helpers ---
 
 func notesDir(userID, folderID string) string {
-	exec, _ := os.Executable()
-	dir := fmt.Sprintf("%s/../notes/%s/%s", exec, userID, folderID)
-	return dir
+	wd, _ := os.Getwd()
+	return fmt.Sprintf("%s/notes/%s/%s", wd, userID, folderID)
 }
 
 func notePath(userID, folderID, filename string) string {
