@@ -15,7 +15,7 @@ async function loadFolders() {
   folders.value = await apiFetch('/folders')
 }
 
-const rootFolders = computed(() => folders.value.filter(f => !f.parent_id))
+const rootFolders = computed(() => (folders.value || []).filter(f => !f.parent_id))
 
 function selectFolder(id) {
   router.push(`/folder/${id}`)

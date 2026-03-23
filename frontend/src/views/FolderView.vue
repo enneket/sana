@@ -60,13 +60,13 @@ function formatDate(dateStr) {
       <button @click="createNote">Create</button>
     </div>
 
-    <div v-if="notes.length === 0 && folderId()" class="empty">
+    <div v-if="!notes || notes.length === 0 && folderId()" class="empty">
       <p>No notes yet. Create one!</p>
     </div>
 
     <div class="note-list">
       <div
-        v-for="note in notes"
+        v-for="note in (notes || [])"
         :key="note.id"
         class="note-item"
         @click="openNote(note.id)"

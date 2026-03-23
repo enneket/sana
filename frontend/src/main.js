@@ -22,7 +22,7 @@ const router = createRouter({
   ]
 })
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
+const API = import.meta.env.VITE_API_URL || '/api'
 
 let _token = localStorage.getItem('token')
 
