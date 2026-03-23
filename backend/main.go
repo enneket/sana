@@ -304,14 +304,26 @@ func handleDeleteFolder(w http.ResponseWriter, r *http.Request) {
 func deleteFolderRecursive(userID, folderID string) {
 	// Delete all notes in this folder
 	db.Exec("DELETE FROM notes WHERE folder_id = ? AND user_id = ?", folderID, userID)
-	// Find and recursively delete child folders
-	rows, _ := db.Query("SELECT id FROM folders WHERE parent_id = ? AND user_id = ?", folderID, userID)
-	for rows.Next() {
-		var childID string
-		rows.Scan(&childID)
-		deleteFolderRecursive(userID, childID)
+	// Find and delete child folders (iterating until no more children found)
+	for {
+		rows, err := db.Query("SELECT id FROM folders WHERE parent_id = ? AND user_id = ?", folderID, userID)
+		if err != nil {
+			break
+		}
+		var childIDs []string
+		for rows.Next() {
+			var id string
+			rows.Scan(&id)
+			childIDs = append(childIDs, id)
+		}
+		rows.Close()
+		if len(childIDs) == 0 {
+			break
+		}
+		for _, childID := range childIDs {
+			deleteFolderRecursive(userID, childID)
+		}
 	}
-	rows.Close()
 	// Delete the folder itself
 	db.Exec("DELETE FROM folders WHERE id = ? AND user_id = ?", folderID, userID)
 }
