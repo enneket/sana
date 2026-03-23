@@ -1,0 +1,69 @@
+import { createApp } from 'vue'
+import { createRouter, createWebHistory } from 'vue-router'
+import App from './App.vue'
+import './style.css'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/login', component: () => import('./views/Login.vue') },
+    { path: '/register', component: () => import('./views/Register.vue') },
+    {
+      path: '/',
+      component: () => import('./views/Layout.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        { path: '', redirect: '/folders' },
+        { path: 'folders', component: () => import('./views/FolderView.vue') },
+        { path: 'folder/:folderId', component: () => import('./views/FolderView.vue') },
+        { path: 'note/:noteId', component: () => import('./views/NoteView.vue') },
+      ]
+    }
+  ]
+})
+
+const API = 'http://localhost:8080/api'
+
+let _token = localStorage.getItem('token')
+
+export async function apiFetch(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json' }
+  if (_token) headers['Authorization'] = `Bearer ${_token}`
+  const res = await fetch(`${API}${path}`, { ...options, headers })
+  if (res.status === 401) {
+    _token = null
+    localStorage.removeItem('token')
+    router.push('/login')
+    throw new Error('unauthorized')
+  }
+  if (res.status === 204) return null
+  return res.json()
+}
+
+export function setToken(t) {
+  _token = t
+  localStorage.setItem('token', t)
+}
+
+export function clearToken() {
+  _token = null
+  localStorage.removeItem('token')
+}
+
+export function isAuthenticated() {
+  return !!_token
+}
+
+const app = createApp(App)
+app.provide('api', API)
+app.use(router)
+app.mount('#app')
+
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth && !isAuthenticated()) {
+    return '/login'
+  }
+  if (!to.meta.requiresAuth && isAuthenticated() && (to.path === '/login' || to.path === '/register')) {
+    return '/'
+  }
+})
