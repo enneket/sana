@@ -22,7 +22,7 @@ const router = createRouter({
   ]
 })
 
-const API = 'http://localhost:8080/api'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8080/api'
 
 let _token = localStorage.getItem('token')
 
@@ -37,6 +37,10 @@ export async function apiFetch(path, options = {}) {
     throw new Error('unauthorized')
   }
   if (res.status === 204) return null
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'request failed' }))
+    throw new Error(err.error || `HTTP ${res.status}`)
+  }
   return res.json()
 }
 
@@ -51,6 +55,7 @@ export function clearToken() {
 }
 
 export function isAuthenticated() {
+  _token = localStorage.getItem('token')
   return !!_token
 }
 

@@ -30,11 +30,15 @@ function scheduleSave() {
 
 async function saveNote() {
   if (!note.value) return
-  await apiFetch(`/notes/${note.value.id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ title: title.value, content: content.value })
-  })
-  saved.value = true
+  try {
+    await apiFetch(`/notes/${note.value.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ title: title.value, content: content.value })
+    })
+    saved.value = true
+  } catch {
+    saved.value = false
+  }
 }
 
 onUnmounted(() => clearTimeout(saveTimer.value))

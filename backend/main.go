@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -17,13 +18,20 @@ import (
 )
 
 var db *sql.DB
-var jwtSecret = []byte(getEnv("JWT_SECRET", "dev-secret-change-in-prod"))
 
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
 	return fallback
+}
+
+func getJWTSecret() []byte {
+	secret := getEnv("JWT_SECRET", "")
+	if secret == "" {
+		log.Fatal("JWT_SECRET environment variable must be set")
+	}
+	return []byte(secret)
 }
 
 func main() {
@@ -173,12 +181,17 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 func handleMe(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	var username string
-	db.QueryRow("SELECT username FROM users WHERE id = ?", userID).Scan(&username)
+	err := db.QueryRow("SELECT username FROM users WHERE id = ?", userID).Scan(&username)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
 	json.NewEncoder(w).Encode(map[string]string{"id": userID, "username": username})
 }
 
 func generateToken(userID string) (string, error) {
-	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"sub": userID}).SignedString(jwtSecret)
+	claims := jwt.MapClaims{"sub": userID, "exp": jwt.NewNumericDate(time.Now().Add(7 * 24 * time.Hour))}
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(getJWTSecret())
 }
 
 func withAuth(next http.HandlerFunc) http.HandlerFunc {
@@ -189,7 +202,7 @@ func withAuth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 		token, err := jwt.Parse(auth[7:], func(t *jwt.Token) (interface{}, error) {
-			return jwtSecret, nil
+			return getJWTSecret(), nil
 		})
 		if err != nil || !token.Valid {
 			http.Error(w, "invalid token", http.StatusUnauthorized)
@@ -284,18 +297,23 @@ func handleDeleteFolder(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	id := strings.TrimPrefix(r.URL.Path, "/api/folders/")
 
-	db.Exec("DELETE FROM notes WHERE folder_id = ? AND user_id = ?", id, userID)
-	result, err := db.Exec("DELETE FROM folders WHERE id = ? AND user_id = ?", id, userID)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-	affected, _ := result.RowsAffected()
-	if affected == 0 {
-		http.Error(w, "not found", http.StatusNotFound)
-		return
-	}
+	deleteFolderRecursive(userID, id)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func deleteFolderRecursive(userID, folderID string) {
+	// Delete all notes in this folder
+	db.Exec("DELETE FROM notes WHERE folder_id = ? AND user_id = ?", folderID, userID)
+	// Find and recursively delete child folders
+	rows, _ := db.Query("SELECT id FROM folders WHERE parent_id = ? AND user_id = ?", folderID, userID)
+	for rows.Next() {
+		var childID string
+		rows.Scan(&childID)
+		deleteFolderRecursive(userID, childID)
+	}
+	rows.Close()
+	// Delete the folder itself
+	db.Exec("DELETE FROM folders WHERE id = ? AND user_id = ?", folderID, userID)
 }
 
 // --- Note handlers ---
@@ -305,6 +323,14 @@ func handleListNotes(w http.ResponseWriter, r *http.Request) {
 	folderID := r.URL.Query().Get("folder_id")
 	if folderID == "" {
 		http.Error(w, "folder_id required", http.StatusBadRequest)
+		return
+	}
+
+	// Verify folder belongs to user
+	var count int
+	db.QueryRow("SELECT COUNT(*) FROM folders WHERE id = ? AND user_id = ?", folderID, userID).Scan(&count)
+	if count == 0 {
+		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
@@ -333,6 +359,14 @@ func handleGetNote(w http.ResponseWriter, r *http.Request) {
 	var n note
 	err := db.QueryRow("SELECT id, title, folder_id, filename FROM notes WHERE id = ? AND user_id = ?", id, userID).Scan(&n.ID, &n.Title, &n.FolderID, &n.Filename)
 	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
+	// Verify folder belongs to user
+	var count int
+	db.QueryRow("SELECT COUNT(*) FROM folders WHERE id = ? AND user_id = ?", n.FolderID, userID).Scan(&count)
+	if count == 0 {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
@@ -419,7 +453,9 @@ func handleDeleteNote(w http.ResponseWriter, r *http.Request) {
 // --- Helpers ---
 
 func notesDir(userID, folderID string) string {
-	return fmt.Sprintf("../notes/%s/%s", userID, folderID)
+	exec, _ := os.Executable()
+	dir := fmt.Sprintf("%s/../notes/%s/%s", exec, userID, folderID)
+	return dir
 }
 
 func notePath(userID, folderID, filename string) string {
