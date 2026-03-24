@@ -250,7 +250,7 @@ function onBodyClick() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px 10px 16px;
+  padding: 6px 12px 6px 16px;
   flex-shrink: 0;
   border-bottom: 1px solid #DDD8CC;
 }
