@@ -99,8 +99,19 @@ func main() {
 	mux.HandleFunc("PUT /api/notes/", withAuth(handleUpdateNote))
 	mux.HandleFunc("DELETE /api/notes/", withAuth(handleDeleteNote))
 
-	// Serve Vue frontend
-	mux.Handle("/", http.FileServer(http.Dir("../frontend/dist")))
+	// Serve Vue frontend (SPA)
+	spa := spaHandler{root: "frontend/dist"}
+	fs := http.FileServer(http.Dir("frontend/dist"))
+	mux.Handle("/assets/", fs)
+	mux.Handle("/favicon.svg", fs)
+	mux.Handle("/icons.svg", fs)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/api/") {
+			http.NotFound(w, r)
+			return
+		}
+		spa.ServeHTTP(w, r)
+	})
 
 	port := getEnv("PORT", "8080")
 	log.Printf("Listening on %s", port)
@@ -313,7 +324,7 @@ func withAuth(next http.HandlerFunc) http.HandlerFunc {
 func handleListFolders(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	foldersMu.RLock()
-	var result []folder
+	result := []folder{}
 	for _, f := range foldersData {
 		if f.UserID == userID {
 			result = append(result, f)
@@ -441,7 +452,7 @@ func handleListNotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	notesMu.RLock()
-	var result []noteMeta
+	result := []noteMeta{}
 	for _, n := range notesData {
 		if n.UserID == userID && n.FolderID == folderID {
 			result = append(result, noteMeta{ID: n.ID, Title: n.Title, FolderID: n.FolderID, UpdatedAt: n.UpdatedAt})
@@ -577,7 +588,15 @@ func deleteNoteFile(userID, folderID, filename string) {
 	os.Remove(filepath.Join(notesDir(userID, folderID), filename))
 }
 
-// --- Types ---
+// --- SPA handler ---
+
+type spaHandler struct {
+	root string
+}
+
+func (h spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, h.root+"/index.html")
+}
 
 type noteMeta struct {
 	ID        string `json:"id"`

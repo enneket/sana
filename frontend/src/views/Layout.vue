@@ -83,8 +83,8 @@ async function logout() {
   transition: border-color 0.15s, color 0.15s;
 }
 .user-menu button:hover { border-color: #6B8FCC; color: #6B8FCC; }
-.body { display: flex; flex: 1; overflow: hidden; }
-.sidebar { width: 240px; flex-shrink: 0; border-right: 1px solid #DDD8CC; overflow-y: auto; }
+.body { display: flex; flex: 1; overflow: hidden; align-items: stretch; }
+.sidebar { width: 20%; max-width: 280px; min-width: 160px; flex-shrink: 0; border-right: 1px solid #DDD8CC; overflow-y: auto; display: flex; flex-direction: column; }
 .main { flex: 1; overflow-y: auto; background: #F5F0E8; }
 .empty-state {
   height: 100%;
