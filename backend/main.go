@@ -2,25 +2,59 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var db *sql.DB
-
 var defaultUserID = "default-user"
 var defaultPasswordHash string
+
+// JSON storage
+var (
+	usersMu      sync.RWMutex
+	usersData    = make(map[string]user)
+
+	foldersMu      sync.RWMutex
+	foldersData    = make(map[string]folder)
+
+	notesMu      sync.RWMutex
+	notesData    = make(map[string]noteRecord)
+)
+
+type user struct {
+	ID           string `json:"id"`
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
+	CreatedAt   string `json:"created_at"`
+}
+
+type folder struct {
+	ID        string  `json:"id"`
+	UserID    string  `json:"user_id"`
+	Name      string  `json:"name"`
+	ParentID  *string `json:"parent_id,omitempty"`
+	CreatedAt string  `json:"created_at"`
+}
+
+type noteRecord struct {
+	ID        string `json:"id"`
+	UserID    string `json:"user_id"`
+	FolderID  string `json:"folder_id"`
+	Title     string `json:"title"`
+	Filename  string `json:"filename"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
 
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
@@ -38,14 +72,11 @@ func getJWTSecret() []byte {
 }
 
 func main() {
-	var err error
-	db, err = sql.Open("sqlite3", "./sana.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+	notesDir := getEnv("NOTES_DIR", "./notes")
+	os.MkdirAll(notesDir, 0755)
 
-	initDB()
+	loadData()
+
 	initDefaultUser()
 
 	mux := http.NewServeMux()
@@ -76,42 +107,109 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
 
-func initDB() {
-	schema := `
-	CREATE TABLE IF NOT EXISTS users (
-		id TEXT PRIMARY KEY,
-		username TEXT UNIQUE NOT NULL,
-		password_hash TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-	);
-	CREATE TABLE IF NOT EXISTS folders (
-		id TEXT PRIMARY KEY,
-		user_id TEXT NOT NULL,
-		name TEXT NOT NULL,
-		parent_id TEXT,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id),
-		FOREIGN KEY (parent_id) REFERENCES folders(id)
-	);
-	CREATE TABLE IF NOT EXISTS notes (
-		id TEXT PRIMARY KEY,
-		user_id TEXT NOT NULL,
-		folder_id TEXT NOT NULL,
-		title TEXT NOT NULL,
-		filename TEXT NOT NULL,
-		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (user_id) REFERENCES users(id),
-		FOREIGN KEY (folder_id) REFERENCES folders(id)
-	);
-	CREATE INDEX IF NOT EXISTS idx_folders_user ON folders(user_id);
-	CREATE INDEX IF NOT EXISTS idx_notes_user ON notes(user_id);
-	CREATE INDEX IF NOT EXISTS idx_notes_folder ON notes(folder_id);
-	`
-	_, err := db.Exec(schema)
+// --- Data persistence ---
+
+func dataDir() string {
+	wd, _ := os.Getwd()
+	return filepath.Join(wd, "data")
+}
+
+func ensureDataDir() {
+	os.MkdirAll(dataDir(), 0755)
+}
+
+func loadData() {
+	ensureDataDir()
+	loadUsers()
+	loadFolders()
+	loadNotes()
+}
+
+func loadUsers() {
+	usersMu.Lock()
+	defer usersMu.Unlock()
+	data, err := os.ReadFile(filepath.Join(dataDir(), "users.json"))
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
+	var list []user
+	if err := json.Unmarshal(data, &list); err != nil {
+		return
+	}
+	usersData = make(map[string]user)
+	for _, u := range list {
+		usersData[u.ID] = u
+	}
+}
+
+func saveUsers() {
+	ensureDataDir()
+	usersMu.RLock()
+	list := make([]user, 0, len(usersData))
+	for _, u := range usersData {
+		list = append(list, u)
+	}
+	usersMu.RUnlock()
+	data, _ := json.MarshalIndent(list, "", "  ")
+	os.WriteFile(filepath.Join(dataDir(), "users.json"), data, 0644)
+}
+
+func loadFolders() {
+	foldersMu.Lock()
+	defer foldersMu.Unlock()
+	data, err := os.ReadFile(filepath.Join(dataDir(), "folders.json"))
+	if err != nil {
+		return
+	}
+	var list []folder
+	if err := json.Unmarshal(data, &list); err != nil {
+		return
+	}
+	foldersData = make(map[string]folder)
+	for _, f := range list {
+		foldersData[f.ID] = f
+	}
+}
+
+func saveFolders() {
+	ensureDataDir()
+	foldersMu.RLock()
+	list := make([]folder, 0, len(foldersData))
+	for _, f := range foldersData {
+		list = append(list, f)
+	}
+	foldersMu.RUnlock()
+	data, _ := json.MarshalIndent(list, "", "  ")
+	os.WriteFile(filepath.Join(dataDir(), "folders.json"), data, 0644)
+}
+
+func loadNotes() {
+	notesMu.Lock()
+	defer notesMu.Unlock()
+	data, err := os.ReadFile(filepath.Join(dataDir(), "notes.json"))
+	if err != nil {
+		return
+	}
+	var list []noteRecord
+	if err := json.Unmarshal(data, &list); err != nil {
+		return
+	}
+	notesData = make(map[string]noteRecord)
+	for _, n := range list {
+		notesData[n.ID] = n
+	}
+}
+
+func saveNotes() {
+	ensureDataDir()
+	notesMu.RLock()
+	list := make([]noteRecord, 0, len(notesData))
+	for _, n := range notesData {
+		list = append(list, n)
+	}
+	notesMu.RUnlock()
+	data, _ := json.MarshalIndent(list, "", "  ")
+	os.WriteFile(filepath.Join(dataDir(), "notes.json"), data, 0644)
 }
 
 func initDefaultUser() {
@@ -124,14 +222,36 @@ func initDefaultUser() {
 		log.Fatal(err)
 	}
 	defaultPasswordHash = string(hash)
-	// Upsert default user
-	db.Exec("INSERT OR IGNORE INTO users (id, username, password_hash) VALUES (?, ?, ?)",
-		defaultUserID, "admin", defaultPasswordHash)
+
+	usersMu.Lock()
+	if _, ok := usersData[defaultUserID]; !ok {
+		usersData[defaultUserID] = user{
+			ID:           defaultUserID,
+			Username:     "admin",
+			PasswordHash: defaultPasswordHash,
+			CreatedAt:    time.Now().Format(time.RFC3339),
+		}
+	} else {
+		// Update password if user exists
+		u := usersData[defaultUserID]
+		u.PasswordHash = defaultPasswordHash
+		usersData[defaultUserID] = u
+	}
+	usersMu.Unlock()
+	saveUsers()
 }
 
 func checkPassword(password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(defaultPasswordHash), []byte(password)) == nil
+	usersMu.RLock()
+	defer usersMu.RUnlock()
+	u, ok := usersData[defaultUserID]
+	if !ok {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
 }
+
+// --- HTTP handlers ---
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	var body struct {
@@ -192,26 +312,15 @@ func withAuth(next http.HandlerFunc) http.HandlerFunc {
 
 func handleListFolders(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
-	rows, err := db.Query("SELECT id, name, parent_id FROM folders WHERE user_id = ?", userID)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	var folders []folder
-	for rows.Next() {
-		var f folder
-		var parentID sql.NullString
-		if err := rows.Scan(&f.ID, &f.Name, &parentID); err != nil {
-			continue
+	foldersMu.RLock()
+	var result []folder
+	for _, f := range foldersData {
+		if f.UserID == userID {
+			result = append(result, f)
 		}
-		if parentID.Valid {
-			f.ParentID = &parentID.String
-		}
-		folders = append(folders, f)
 	}
-	json.NewEncoder(w).Encode(folders)
+	foldersMu.RUnlock()
+	json.NewEncoder(w).Encode(result)
 }
 
 func handleCreateFolder(w http.ResponseWriter, r *http.Request) {
@@ -226,21 +335,30 @@ func handleCreateFolder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.ParentID != nil {
-		var count int
-		db.QueryRow("SELECT COUNT(*) FROM folders WHERE id = ? AND user_id = ?", *body.ParentID, userID).Scan(&count)
-		if count == 0 {
+		foldersMu.RLock()
+		_, exists := foldersData[*body.ParentID]
+		foldersMu.RUnlock()
+		if !exists || *body.ParentID != "" && !folderBelongsToUser(userID, *body.ParentID) {
 			http.Error(w, "parent folder not found", http.StatusBadRequest)
 			return
 		}
 	}
 
 	id := uuid.New().String()
-	_, err := db.Exec("INSERT INTO folders (id, user_id, name, parent_id) VALUES (?, ?, ?, ?)", id, userID, body.Name, body.ParentID)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(folder{ID: id, Name: body.Name, ParentID: body.ParentID})
+	now := time.Now().Format(time.RFC3339)
+	f := folder{ID: id, UserID: userID, Name: body.Name, ParentID: body.ParentID, CreatedAt: now}
+	foldersMu.Lock()
+	foldersData[id] = f
+	foldersMu.Unlock()
+	saveFolders()
+	json.NewEncoder(w).Encode(f)
+}
+
+func folderBelongsToUser(userID, folderID string) bool {
+	foldersMu.RLock()
+	defer foldersMu.RUnlock()
+	f, ok := foldersData[folderID]
+	return ok && f.UserID == userID
 }
 
 func handleUpdateFolder(w http.ResponseWriter, r *http.Request) {
@@ -254,16 +372,17 @@ func handleUpdateFolder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := db.Exec("UPDATE folders SET name = ? WHERE id = ? AND user_id = ?", body.Name, id, userID)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-	affected, _ := result.RowsAffected()
-	if affected == 0 {
+	foldersMu.Lock()
+	f, ok := foldersData[id]
+	if !ok || f.UserID != userID {
+		foldersMu.Unlock()
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
+	f.Name = body.Name
+	foldersData[id] = f
+	foldersMu.Unlock()
+	saveFolders()
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -276,30 +395,34 @@ func handleDeleteFolder(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteFolderRecursive(userID, folderID string) {
-	// Delete all notes in this folder
-	db.Exec("DELETE FROM notes WHERE folder_id = ? AND user_id = ?", folderID, userID)
-	// Find and delete child folders (iterating until no more children found)
-	for {
-		rows, err := db.Query("SELECT id FROM folders WHERE parent_id = ? AND user_id = ?", folderID, userID)
-		if err != nil {
-			break
-		}
-		var childIDs []string
-		for rows.Next() {
-			var id string
-			rows.Scan(&id)
-			childIDs = append(childIDs, id)
-		}
-		rows.Close()
-		if len(childIDs) == 0 {
-			break
-		}
-		for _, childID := range childIDs {
-			deleteFolderRecursive(userID, childID)
+	notesMu.Lock()
+	var notesToDelete []string
+	for id, n := range notesData {
+		if n.UserID == userID && n.FolderID == folderID {
+			notesToDelete = append(notesToDelete, id)
 		}
 	}
-	// Delete the folder itself
-	db.Exec("DELETE FROM folders WHERE id = ? AND user_id = ?", folderID, userID)
+	for _, nid := range notesToDelete {
+		deleteNoteFile(userID, notesData[nid].FolderID, notesData[nid].Filename)
+		delete(notesData, nid)
+	}
+	notesMu.Unlock()
+	saveNotes()
+
+	// Find child folders
+	foldersMu.Lock()
+	var childIDs []string
+	for fid, f := range foldersData {
+		if f.UserID == userID && f.ParentID != nil && *f.ParentID == folderID {
+			childIDs = append(childIDs, fid)
+		}
+	}
+	for _, cid := range childIDs {
+		deleteFolderRecursive(userID, cid)
+	}
+	delete(foldersData, folderID)
+	foldersMu.Unlock()
+	saveFolders()
 }
 
 // --- Note handlers ---
@@ -312,57 +435,43 @@ func handleListNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify folder belongs to user
-	var count int
-	db.QueryRow("SELECT COUNT(*) FROM folders WHERE id = ? AND user_id = ?", folderID, userID).Scan(&count)
-	if count == 0 {
+	if !folderBelongsToUser(userID, folderID) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
-	rows, err := db.Query("SELECT id, title, folder_id, updated_at FROM notes WHERE user_id = ? AND folder_id = ? ORDER BY updated_at DESC", userID, folderID)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	var notes []noteMeta
-	for rows.Next() {
-		var n noteMeta
-		if err := rows.Scan(&n.ID, &n.Title, &n.FolderID, &n.UpdatedAt); err != nil {
-			continue
+	notesMu.RLock()
+	var result []noteMeta
+	for _, n := range notesData {
+		if n.UserID == userID && n.FolderID == folderID {
+			result = append(result, noteMeta{ID: n.ID, Title: n.Title, FolderID: n.FolderID, UpdatedAt: n.UpdatedAt})
 		}
-		notes = append(notes, n)
 	}
-	json.NewEncoder(w).Encode(notes)
+	notesMu.RUnlock()
+	json.NewEncoder(w).Encode(result)
 }
 
 func handleGetNote(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	id := strings.TrimPrefix(r.URL.Path, "/api/notes/")
 
-	var n note
-	err := db.QueryRow("SELECT id, title, folder_id, filename FROM notes WHERE id = ? AND user_id = ?", id, userID).Scan(&n.ID, &n.Title, &n.FolderID, &n.Filename)
-	if err != nil {
+	notesMu.RLock()
+	n, ok := notesData[id]
+	notesMu.RUnlock()
+	if !ok || n.UserID != userID {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
-	// Verify folder belongs to user
-	var count int
-	db.QueryRow("SELECT COUNT(*) FROM folders WHERE id = ? AND user_id = ?", n.FolderID, userID).Scan(&count)
-	if count == 0 {
+	if !folderBelongsToUser(userID, n.FolderID) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
-	content, err := os.ReadFile(notePath(userID, n.FolderID, n.Filename))
-	if err != nil {
-		content = []byte("")
-	}
-	n.Content = string(content)
-	json.NewEncoder(w).Encode(n)
+	content := readNoteFile(userID, n.FolderID, n.Filename)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id": n.ID, "title": n.Title, "content": content, "folder_id": n.FolderID,
+	})
 }
 
 func handleCreateNote(w http.ResponseWriter, r *http.Request) {
@@ -377,17 +486,21 @@ func handleCreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := uuid.New().String()
-	filename := id + ".md"
-	dir := notesDir(userID, body.FolderID)
-	os.MkdirAll(dir, 0755)
-	os.WriteFile(dir+"/"+filename, []byte(body.Content), 0644)
-
-	_, err := db.Exec("INSERT INTO notes (id, user_id, folder_id, title, filename) VALUES (?, ?, ?, ?, ?)", id, userID, body.FolderID, body.Title, filename)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
+	if !folderBelongsToUser(userID, body.FolderID) {
+		http.Error(w, "folder not found", http.StatusBadRequest)
 		return
 	}
+
+	id := uuid.New().String()
+	filename := id + ".md"
+	now := time.Now().Format(time.RFC3339)
+	writeNoteFile(userID, body.FolderID, filename, body.Content)
+
+	notesMu.Lock()
+	notesData[id] = noteRecord{ID: id, UserID: userID, FolderID: body.FolderID, Title: body.Title, Filename: filename, CreatedAt: now, UpdatedAt: now}
+	notesMu.Unlock()
+	saveNotes()
+
 	json.NewEncoder(w).Encode(map[string]interface{}{"id": id, "title": body.Title, "folder_id": body.FolderID})
 }
 
@@ -403,20 +516,24 @@ func handleUpdateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var folderID, filename string
-	err := db.QueryRow("SELECT folder_id, filename FROM notes WHERE id = ? AND user_id = ?", id, userID).Scan(&folderID, &filename)
-	if err != nil {
+	notesMu.Lock()
+	n, ok := notesData[id]
+	if !ok || n.UserID != userID {
+		notesMu.Unlock()
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
 	if body.Title != nil {
-		db.Exec("UPDATE notes SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", *body.Title, id)
+		n.Title = *body.Title
 	}
 	if body.Content != nil {
-		os.WriteFile(notesDir(userID, folderID)+"/"+filename, []byte(*body.Content), 0644)
-		db.Exec("UPDATE notes SET updated_at = CURRENT_TIMESTAMP WHERE id = ?", id)
+		writeNoteFile(userID, n.FolderID, n.Filename, *body.Content)
 	}
+	n.UpdatedAt = time.Now().Format(time.RFC3339)
+	notesData[id] = n
+	notesMu.Unlock()
+	saveNotes()
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -424,46 +541,47 @@ func handleDeleteNote(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	id := strings.TrimPrefix(r.URL.Path, "/api/notes/")
 
-	var folderID, filename string
-	err := db.QueryRow("SELECT folder_id, filename FROM notes WHERE id = ? AND user_id = ?", id, userID).Scan(&folderID, &filename)
-	if err != nil {
+	notesMu.Lock()
+	n, ok := notesData[id]
+	if !ok || n.UserID != userID {
+		notesMu.Unlock()
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
-	os.Remove(notesDir(userID, folderID) + "/" + filename)
-	db.Exec("DELETE FROM notes WHERE id = ? AND user_id = ?", id, userID)
+	deleteNoteFile(userID, n.FolderID, n.Filename)
+	delete(notesData, id)
+	notesMu.Unlock()
+	saveNotes()
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// --- Helpers ---
+// --- File helpers ---
 
 func notesDir(userID, folderID string) string {
-	wd, _ := os.Getwd()
-	return fmt.Sprintf("%s/notes/%s/%s", wd, userID, folderID)
+	return filepath.Join(getEnv("NOTES_DIR", "./notes"), userID, folderID)
 }
 
-func notePath(userID, folderID, filename string) string {
-	return notesDir(userID, folderID) + "/" + filename
+func writeNoteFile(userID, folderID, filename, content string) {
+	dir := notesDir(userID, folderID)
+	os.MkdirAll(dir, 0755)
+	os.WriteFile(filepath.Join(dir, filename), []byte(content), 0644)
 }
 
-type folder struct {
-	ID       string  `json:"id"`
-	Name     string  `json:"name"`
-	ParentID *string `json:"parent_id,omitempty"`
+func readNoteFile(userID, folderID, filename string) string {
+	data, _ := os.ReadFile(filepath.Join(notesDir(userID, folderID), filename))
+	return string(data)
 }
+
+func deleteNoteFile(userID, folderID, filename string) {
+	os.Remove(filepath.Join(notesDir(userID, folderID), filename))
+}
+
+// --- Types ---
 
 type noteMeta struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
 	FolderID  string `json:"folder_id"`
 	UpdatedAt string `json:"updated_at"`
-}
-
-type note struct {
-	ID       string `json:"id"`
-	Title    string `json:"title"`
-	Content  string `json:"content"`
-	FolderID string `json:"folder_id"`
-	Filename string `json:"-"`
 }
