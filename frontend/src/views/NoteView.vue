@@ -134,6 +134,7 @@ async function deleteNote() {
   flex-direction: column;
   height: 100%;
   background: #F5F0E8;
+  overflow: hidden;
 }
 .toolbar {
   display: flex;
@@ -202,13 +203,11 @@ async function deleteNote() {
 }
 
 .editor-wrap {
-  flex: 1;
+  height: calc(100vh - 84px);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 .editor {
-  flex: 1;
+  height: 100%;
   background: #F5F0E8;
   border: none;
   color: #3D3830;
@@ -228,7 +227,7 @@ async function deleteNote() {
 .editor::placeholder { color: #C4BA9E; }
 
 .preview {
-  flex: 1;
+  height: calc(100vh - 84px);
   background: #F5F0E8;
   padding: 32px 48px;
   overflow-y: auto;
@@ -237,8 +236,6 @@ async function deleteNote() {
   color: #4A453E;
   max-width: 720px;
   margin: 0 auto;
-  display: block;
-  width: 100%;
   box-sizing: border-box;
 }
 .preview::-webkit-scrollbar { width: 6px; }

@@ -7,3 +7,4 @@ sana.db
 backend/sana
 backend/notes/
 notes/
+.gstack/

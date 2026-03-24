@@ -59,7 +59,7 @@ async function logout() {
 </template>
 
 <style scoped>
-.layout { min-height: 100vh; display: flex; flex-direction: column; background: #F5F0E8; }
+.layout { height: 100vh; display: flex; flex-direction: column; background: #F5F0E8; overflow: hidden; }
 .header {
   height: 40px;
   padding: 0 16px;
@@ -83,9 +83,9 @@ async function logout() {
   transition: border-color 0.15s, color 0.15s;
 }
 .user-menu button:hover { border-color: #6B8FCC; color: #6B8FCC; }
-.body { display: flex; flex: 1; overflow: hidden; align-items: stretch; }
-.sidebar { width: 20%; max-width: 280px; min-width: 160px; flex-shrink: 0; border-right: 1px solid #DDD8CC; overflow-y: auto; display: flex; flex-direction: column; }
-.main { flex: 1; overflow-y: auto; background: #F5F0E8; }
+.body { display: flex; flex: 1; overflow: hidden; }
+.sidebar { width: 20%; max-width: 280px; min-width: 160px; flex-shrink: 0; border-right: 1px solid #DDD8CC; overflow-y: auto; }
+.main { flex: 1; overflow-y: auto; background: #F5F0E8; height: 100%; display: flex; flex-direction: column; }
 .empty-state {
   height: 100%;
   display: flex;
