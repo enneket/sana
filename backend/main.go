@@ -19,6 +19,9 @@ import (
 
 var db *sql.DB
 
+var defaultUserID = "default-user"
+var defaultPasswordHash string
+
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -43,11 +46,11 @@ func main() {
 	defer db.Close()
 
 	initDB()
+	initDefaultUser()
 
 	mux := http.NewServeMux()
 
 	// Auth
-	mux.HandleFunc("POST /api/auth/register", handleRegister)
 	mux.HandleFunc("POST /api/auth/login", handleLogin)
 	mux.HandleFunc("POST /api/auth/logout", handleLogout)
 	mux.HandleFunc("GET /api/auth/me", withAuth(handleMe))
@@ -111,42 +114,27 @@ func initDB() {
 	}
 }
 
-// --- Auth handlers ---
-
-func handleRegister(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+func initDefaultUser() {
+	password := getEnv("SANA_PASSWORD", "")
+	if password == "" {
+		log.Fatal("SANA_PASSWORD environment variable must be set")
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Username == "" || body.Password == "" {
-		http.Error(w, "invalid request", http.StatusBadRequest)
-		return
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
+		log.Fatal(err)
 	}
+	defaultPasswordHash = string(hash)
+	// Upsert default user
+	db.Exec("INSERT OR IGNORE INTO users (id, username, password_hash) VALUES (?, ?, ?)",
+		defaultUserID, "admin", defaultPasswordHash)
+}
 
-	id := uuid.New().String()
-	_, err = db.Exec("INSERT INTO users (id, username, password_hash) VALUES (?, ?, ?)", id, body.Username, string(hash))
-	if err != nil {
-		http.Error(w, "username taken", http.StatusConflict)
-		return
-	}
-
-	token, err := generateToken(id)
-	if err != nil {
-		http.Error(w, "server error", http.StatusInternalServerError)
-		return
-	}
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+func checkPassword(password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(defaultPasswordHash), []byte(password)) == nil
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -154,19 +142,12 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var id, hash string
-	err := db.QueryRow("SELECT id, password_hash FROM users WHERE username = ?", body.Username).Scan(&id, &hash)
-	if err != nil {
-		http.Error(w, "invalid credentials", http.StatusUnauthorized)
+	if !checkPassword(body.Password) {
+		http.Error(w, "invalid password", http.StatusUnauthorized)
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(body.Password)); err != nil {
-		http.Error(w, "invalid credentials", http.StatusUnauthorized)
-		return
-	}
-
-	token, err := generateToken(id)
+	token, err := generateToken(defaultUserID)
 	if err != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
@@ -179,14 +160,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleMe(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(string)
-	var username string
-	err := db.QueryRow("SELECT username FROM users WHERE id = ?", userID).Scan(&username)
-	if err != nil {
-		http.Error(w, "not found", http.StatusNotFound)
-		return
-	}
-	json.NewEncoder(w).Encode(map[string]string{"id": userID, "username": username})
+	json.NewEncoder(w).Encode(map[string]string{"id": defaultUserID, "username": "admin"})
 }
 
 func generateToken(userID string) (string, error) {

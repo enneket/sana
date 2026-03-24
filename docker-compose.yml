@@ -8,5 +8,6 @@ services:
       - ./notes:/app/notes
       - ./sana.db:/app/sana.db
     environment:
-      - JWT_SECRET=${JWT_SECRET:-change-me-in-prod}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
+      - SANA_PASSWORD=${SANA_PASSWORD:?SANA_PASSWORD is required}
       - PORT=8080

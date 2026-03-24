@@ -7,7 +7,6 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/login', component: () => import('./views/Login.vue') },
-    { path: '/register', component: () => import('./views/Register.vue') },
     {
       path: '/',
       component: () => import('./views/Layout.vue'),
@@ -68,7 +67,7 @@ router.beforeEach((to) => {
   if (to.meta.requiresAuth && !isAuthenticated()) {
     return '/login'
   }
-  if (!to.meta.requiresAuth && isAuthenticated() && (to.path === '/login' || to.path === '/register')) {
+  if (!to.meta.requiresAuth && isAuthenticated() && to.path === '/login') {
     return '/'
   }
 })

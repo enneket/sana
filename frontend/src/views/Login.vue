@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import { apiFetch, setToken } from '../main.js'
 
 const router = useRouter()
-const username = ref('')
 const password = ref('')
 const error = ref('')
 
@@ -13,12 +12,12 @@ async function login() {
   try {
     const data = await apiFetch('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username: username.value, password: password.value })
+      body: JSON.stringify({ password: password.value })
     })
     setToken(data.token)
     router.push('/')
   } catch (e) {
-    error.value = '用户名或密码错误'
+    error.value = '密码错误'
   }
 }
 </script>
@@ -27,16 +26,12 @@ async function login() {
   <div class="auth-page">
     <div class="auth-card">
       <h1>Sana</h1>
-      <p class="subtitle">登录到 Sana</p>
+      <p class="subtitle">输入密码登录</p>
       <form @submit.prevent="login">
-        <input v-model="username" placeholder="用户名" required />
-        <input v-model="password" type="password" placeholder="密码" required />
+        <input v-model="password" type="password" placeholder="密码" required autofocus />
         <button type="submit">登录</button>
         <p v-if="error" class="error">{{ error }}</p>
       </form>
-      <p class="switch">
-        没有账号？<router-link to="/register">注册</router-link>
-      </p>
     </div>
   </div>
 </template>
@@ -84,6 +79,4 @@ button {
 }
 button:hover { background: #3a8eef; }
 .error { color: #ff6b6b; font-size: 13px; text-align: center; margin-top: 12px; }
-.switch { color: #888; font-size: 13px; text-align: center; margin-top: 20px; }
-.switch a { color: #4a9eff; }
 </style>
