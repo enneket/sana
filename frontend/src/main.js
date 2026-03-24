@@ -11,12 +11,6 @@ const router = createRouter({
       path: '/',
       component: () => import('./views/Layout.vue'),
       meta: { requiresAuth: true },
-      children: [
-        { path: '', redirect: '/folders' },
-        { path: 'folders', component: () => import('./views/FolderView.vue') },
-        { path: 'folder/:folderId', component: () => import('./views/FolderView.vue') },
-        { path: 'note/:noteId', component: () => import('./views/NoteView.vue') },
-      ]
     }
   ]
 })

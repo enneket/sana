@@ -1,19 +1,25 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiFetch, clearToken } from '../main.js'
-import FolderSidebar from '../components/FolderSidebar.vue'
+import TreeView from '../components/TreeView.vue'
+import NoteView from './NoteView.vue'
 
 const router = useRouter()
-const user = ref(null)
+const selectedNote = ref(null)
+const treeRefreshKey = ref(0)
 
-onMounted(async () => {
-  try {
-    user.value = await apiFetch('/auth/me')
-  } catch {
-    router.push('/login')
-  }
-})
+function onSelectNote(note) {
+  selectedNote.value = note
+}
+
+async function onNoteDeleted() {
+  selectedNote.value = null
+}
+
+function onNoteSaved() {
+  treeRefreshKey.value++
+}
 
 async function logout() {
   await apiFetch('/auth/logout', { method: 'POST' })
@@ -27,14 +33,26 @@ async function logout() {
     <header class="header">
       <span class="logo">Sana</span>
       <div class="user-menu">
-        <span v-if="user">{{ user.username }}</span>
         <button @click="logout">退出</button>
       </div>
     </header>
     <div class="body">
-      <FolderSidebar class="sidebar" />
+      <TreeView
+        class="sidebar"
+        :selected-note-id="selectedNote?.id"
+        :refresh="treeRefreshKey"
+        @select-note="onSelectNote"
+      />
       <main class="main">
-        <RouterView />
+        <NoteView
+          v-if="selectedNote"
+          :note="selectedNote"
+          @deleted="onNoteDeleted"
+          @saved="onNoteSaved"
+        />
+        <div v-else class="empty-state">
+          <p>选择或新建一个笔记</p>
+        </div>
       </main>
     </div>
   </div>
@@ -65,6 +83,14 @@ async function logout() {
 }
 .user-menu button:hover { border-color: #4a9eff; color: #4a9eff; }
 .body { display: flex; flex: 1; overflow: hidden; }
-.sidebar { width: 220px; flex-shrink: 0; border-right: 1px solid #2a2a4a; overflow-y: auto; }
+.sidebar { width: 240px; flex-shrink: 0; border-right: 1px solid #2a2a4a; overflow-y: auto; }
 .main { flex: 1; overflow-y: auto; }
+.empty-state {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 14px;
+}
 </style>
