@@ -59,38 +59,39 @@ async function logout() {
 </template>
 
 <style scoped>
-.layout { min-height: 100vh; display: flex; flex-direction: column; background: #1a1a2e; }
+.layout { min-height: 100vh; display: flex; flex-direction: column; background: #F5F0E8; }
 .header {
-  height: 48px;
-  padding: 0 20px;
-  background: #16162a;
-  border-bottom: 1px solid #2a2a4a;
+  height: 40px;
+  padding: 0 16px;
+  background: #EDE8DF;
+  border-bottom: 1px solid #DDD8CC;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
-.logo { color: #e8e8e8; font-weight: 600; font-size: 16px; }
-.user-menu { display: flex; align-items: center; gap: 12px; color: #888; font-size: 13px; }
+.logo { color: #3D3830; font-weight: 600; font-size: 14px; letter-spacing: -0.3px; }
+.user-menu { display: flex; align-items: center; gap: 12px; }
 .user-menu button {
   background: none;
-  border: 1px solid #2a2a4a;
-  color: #888;
-  padding: 4px 12px;
+  border: 1px solid #D4CCBA;
+  color: #8A8478;
+  padding: 3px 10px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  transition: border-color 0.15s, color 0.15s;
 }
-.user-menu button:hover { border-color: #4a9eff; color: #4a9eff; }
+.user-menu button:hover { border-color: #6B8FCC; color: #6B8FCC; }
 .body { display: flex; flex: 1; overflow: hidden; }
-.sidebar { width: 240px; flex-shrink: 0; border-right: 1px solid #2a2a4a; overflow-y: auto; }
-.main { flex: 1; overflow-y: auto; }
+.sidebar { width: 240px; flex-shrink: 0; border-right: 1px solid #DDD8CC; overflow-y: auto; }
+.main { flex: 1; overflow-y: auto; background: #F5F0E8; }
 .empty-state {
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #555;
+  color: #ADA99F;
   font-size: 14px;
 }
 </style>

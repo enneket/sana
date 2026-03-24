@@ -42,41 +42,45 @@ async function login() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1a2e;
+  background: #F5F0E8;
 }
 .auth-card {
-  background: #16162a;
-  border: 1px solid #2a2a4a;
-  border-radius: 12px;
+  background: #EAE5DC;
+  border: 1px solid #DDD8CC;
+  border-radius: 8px;
   padding: 40px;
   width: 320px;
 }
-h1 { color: #e8e8e8; margin: 0 0 8px; text-align: center; }
-.subtitle { color: #888; text-align: center; margin: 0 0 32px; font-size: 14px; }
+h1 { color: #3D3830; margin: 0 0 8px; text-align: center; font-weight: 600; font-size: 24px; letter-spacing: -0.5px; }
+.subtitle { color: #A09888; text-align: center; margin: 0 0 32px; font-size: 13px; }
 input {
   display: block;
   width: 100%;
-  padding: 12px;
+  padding: 10px 12px;
   margin-bottom: 12px;
-  background: #1a1a2e;
-  border: 1px solid #2a2a4a;
+  background: #F5F0E8;
+  border: 1px solid #D4CCBA;
   border-radius: 6px;
-  color: #e8e8e8;
+  color: #3D3830;
   font-size: 14px;
   box-sizing: border-box;
+  transition: border-color 0.15s;
 }
-input:focus { outline: none; border-color: #4a9eff; }
+input:focus { outline: none; border-color: #6B8FCC; }
+input::placeholder { color: #B8AFA0; }
 button {
   width: 100%;
-  padding: 12px;
-  background: #4a9eff;
+  padding: 10px;
+  background: #6B8FCC;
   border: none;
   border-radius: 6px;
   color: #fff;
   font-size: 14px;
   cursor: pointer;
   margin-top: 8px;
+  font-weight: 500;
+  transition: background 0.15s;
 }
-button:hover { background: #3a8eef; }
-.error { color: #ff6b6b; font-size: 13px; text-align: center; margin-top: 12px; }
+button:hover { background: #5A7EBB; }
+.error { color: #C06050; font-size: 13px; text-align: center; margin-top: 12px; }
 </style>
