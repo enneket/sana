@@ -21,7 +21,7 @@
 ```bash
 # 克隆项目
 git clone https://github.com/enneket/sana.git
-cd sana
+cd sana/docker
 
 # 启动
 docker-compose up -d
@@ -85,6 +85,9 @@ sana/
 │           ├── NoteView.vue   # 笔记编辑器
 │           ├── Login.vue      # 登录页
 │           └── Layout.vue     # 主布局
+├── docker/          # Docker 部署
+│   ├── Dockerfile
+│   └── docker-compose.yml
 └── notes/          # 笔记文件（Markdown）
 ```
 
