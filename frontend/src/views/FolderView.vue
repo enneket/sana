@@ -6,8 +6,6 @@ import { apiFetch } from '../main.js'
 const route = useRoute()
 const router = useRouter()
 const notes = ref([])
-const showNewNote = ref(false)
-const newNoteTitle = ref('')
 
 const folderId = () => route.params.folderId
 
@@ -23,13 +21,11 @@ onMounted(loadNotes)
 watch(() => route.params.folderId, loadNotes)
 
 async function createNote() {
-  if (!newNoteTitle.value.trim() || !folderId()) return
+  if (!folderId()) return
   const data = await apiFetch('/notes', {
     method: 'POST',
-    body: JSON.stringify({ title: newNoteTitle.value.trim(), content: '', folder_id: folderId() })
+    body: JSON.stringify({ title: '无标题', content: '', folder_id: folderId() })
   })
-  newNoteTitle.value = ''
-  showNewNote.value = false
   router.push(`/note/${data.id}`)
 }
 
@@ -47,21 +43,16 @@ function formatDate(dateStr) {
 <template>
   <div class="folder-view">
     <div class="topbar">
-      <h2>Notes</h2>
-      <button v-if="folderId()" @click="showNewNote = !showNewNote">+ New Note</button>
+      <h2>笔记</h2>
+      <button v-if="folderId()" @click="createNote">+ 新建笔记</button>
     </div>
 
     <div v-if="!folderId()" class="empty">
-      <p>Select a folder to see notes</p>
-    </div>
-
-    <div v-else-if="showNewNote" class="new-note-form">
-      <input v-model="newNoteTitle" placeholder="Note title" @keyup.enter="createNote" />
-      <button @click="createNote">Create</button>
+      <p>选择一个文件夹查看笔记</p>
     </div>
 
     <div v-if="!notes || notes.length === 0 && folderId()" class="empty">
-      <p>No notes yet. Create one!</p>
+      <p>暂无笔记，创建第一篇吧</p>
     </div>
 
     <div class="note-list">

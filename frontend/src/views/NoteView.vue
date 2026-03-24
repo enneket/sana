@@ -45,7 +45,7 @@ onUnmounted(() => clearTimeout(saveTimer.value))
 
 async function deleteNote() {
   if (!note.value) return
-  if (!confirm('Delete this note?')) return
+  if (!confirm('删除此笔记？')) return
   await apiFetch(`/notes/${note.value.id}`, { method: 'DELETE' })
   router.back()
 }
@@ -64,8 +64,8 @@ async function deleteNote() {
         />
       </div>
       <div class="right">
-        <span v-if="saved" class="saved-indicator">Saved</span>
-        <button class="delete-btn" @click="deleteNote">Delete</button>
+        <span v-if="saved" class="saved-indicator">已保存</span>
+        <button class="delete-btn" @click="deleteNote">删除</button>
       </div>
     </div>
     <textarea

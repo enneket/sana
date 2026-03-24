@@ -28,7 +28,7 @@ async function logout() {
       <span class="logo">Sana</span>
       <div class="user-menu">
         <span v-if="user">{{ user.username }}</span>
-        <button @click="logout">Logout</button>
+        <button @click="logout">退出</button>
       </div>
     </header>
     <div class="body">

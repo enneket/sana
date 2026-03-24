@@ -18,7 +18,7 @@ async function register() {
     setToken(data.token)
     router.push('/')
   } catch (e) {
-    error.value = 'Registration failed'
+    error.value = '注册失败'
   }
 }
 </script>
@@ -27,15 +27,15 @@ async function register() {
   <div class="auth-page">
     <div class="auth-card">
       <h1>Sana</h1>
-      <p class="subtitle">Create your account</p>
+      <p class="subtitle">创建账号</p>
       <form @submit.prevent="register">
-        <input v-model="username" placeholder="Username" required />
-        <input v-model="password" type="password" placeholder="Password" required />
-        <button type="submit">Register</button>
+        <input v-model="username" placeholder="用户名" required />
+        <input v-model="password" type="password" placeholder="密码" required />
+        <button type="submit">注册</button>
         <p v-if="error" class="error">{{ error }}</p>
       </form>
       <p class="switch">
-        Have an account? <router-link to="/login">Sign in</router-link>
+        已有账号？<router-link to="/login">登录</router-link>
       </p>
     </div>
   </div>

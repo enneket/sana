@@ -34,7 +34,7 @@ async function createFolder() {
 
 async function deleteFolder(id, e) {
   e.stopPropagation()
-  if (!confirm('Delete folder and all notes inside?')) return
+  if (!confirm('删除文件夹及其所有笔记？')) return
   await apiFetch(`/folders/${id}`, { method: 'DELETE' })
   router.push('/folders')
   await loadFolders()
@@ -48,13 +48,13 @@ function getChildren(parentId) {
 <template>
   <div class="sidebar">
     <div class="sidebar-header">
-      <span>Folders</span>
-      <button @click="showNewFolder = !showNewFolder" title="New folder">+</button>
+      <span>文件夹</span>
+      <button @click="showNewFolder = !showNewFolder" title="新建文件夹">+</button>
     </div>
 
     <div v-if="showNewFolder" class="new-folder">
-      <input v-model="newFolderName" placeholder="Folder name" @keyup.enter="createFolder" />
-      <button @click="createFolder">Add</button>
+      <input v-model="newFolderName" placeholder="文件夹名称" @keyup.enter="createFolder" />
+      <button @click="createFolder">添加</button>
     </div>
 
     <div class="folder-list">

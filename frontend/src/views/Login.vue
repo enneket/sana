@@ -18,7 +18,7 @@ async function login() {
     setToken(data.token)
     router.push('/')
   } catch (e) {
-    error.value = 'Invalid credentials'
+    error.value = '用户名或密码错误'
   }
 }
 </script>
@@ -27,15 +27,15 @@ async function login() {
   <div class="auth-page">
     <div class="auth-card">
       <h1>Sana</h1>
-      <p class="subtitle">Sign in to your notes</p>
+      <p class="subtitle">登录到 Sana</p>
       <form @submit.prevent="login">
-        <input v-model="username" placeholder="Username" required />
-        <input v-model="password" type="password" placeholder="Password" required />
-        <button type="submit">Sign in</button>
+        <input v-model="username" placeholder="用户名" required />
+        <input v-model="password" type="password" placeholder="密码" required />
+        <button type="submit">登录</button>
         <p v-if="error" class="error">{{ error }}</p>
       </form>
       <p class="switch">
-        No account? <router-link to="/register">Register</router-link>
+        没有账号？<router-link to="/register">注册</router-link>
       </p>
     </div>
   </div>
