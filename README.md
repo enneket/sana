@@ -11,7 +11,7 @@
 
 ## 技术栈
 
-- 后端：Go + SQLite + JWT
+- 后端：Go + JSON 文件存储 + JWT
 - 前端：Vue 3 + Vite
 
 ## 快速部署
@@ -24,10 +24,10 @@ git clone https://github.com/enneket/sana.git
 cd sana/docker
 
 # 启动
-docker-compose up -d
+JWT_SECRET=your-secret SANA_PASSWORD=your-password docker compose up -d
 ```
 
-访问 `http://localhost:8080`，使用环境变量 `SANA_PASSWORD` 设置的密码登录，默认密码为 `sana123`。
+访问 `http://localhost:8080`，使用 `SANA_PASSWORD` 设置的密码登录。
 
 ### 手动运行
 
@@ -47,26 +47,15 @@ npm run dev
 
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
-| `SANA_PASSWORD` | 登录密码 | `sana123` |
-| `JWT_SECRET` | JWT 签名密钥 | `change-me-in-production` |
+| `SANA_PASSWORD` | 登录密码 | **必须设置** |
+| `JWT_SECRET` | JWT 签名密钥 | **必须设置** |
+| `PORT` | 服务端口 | `8080` |
+| `NOTES_DIR` | 笔记目录 | `./notes` |
 
 ## 数据存储
 
-- **元数据**：`sana.db`（SQLite）— 用户、文件夹、笔记关系
+- **元数据**：`data/` 目录下的 JSON 文件（users.json、folders.json、notes.json）
 - **笔记正文**：`notes/` 目录下的 `.md` 文件
-
-## 开发
-
-```bash
-# 前端开发
-cd frontend
-npm install
-npm run dev
-
-# 后端开发
-cd backend
-go run .
-```
 
 ## 项目结构
 
@@ -74,13 +63,13 @@ go run .
 sana/
 ├── backend/          # Go 后端
 │   ├── main.go      # 入口
-│   ├── handlers/    # API 接口
-│   └── Sana.db     # SQLite 数据库
+│   └── data/       # JSON 元数据存储
 ├── frontend/        # Vue 3 前端
 │   └── src/
 │       ├── components/
 │       │   ├── TreeView.vue   # 树形目录
-│       │   └── TreeNode.vue   # 递归文件夹节点
+│       │   ├── TreeNode.vue   # 递归文件夹节点
+│       │   └── FolderSidebar.vue
 │       └── views/
 │           ├── NoteView.vue   # 笔记编辑器
 │           ├── Login.vue      # 登录页
@@ -88,6 +77,7 @@ sana/
 ├── docker/          # Docker 部署
 │   ├── Dockerfile
 │   └── docker-compose.yml
+├── data/           # 元数据（用户、文件夹、笔记关系）
 └── notes/          # 笔记文件（Markdown）
 ```
 
