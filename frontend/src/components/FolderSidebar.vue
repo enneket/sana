@@ -8,6 +8,69 @@ const folders = ref([])
 const newFolderName = ref('')
 const showNewFolder = ref(false)
 const expandedFolders = ref(new Set())
+const importInput = ref(null)
+const importMessage = ref('')
+
+async function refreshTree() {
+  await loadFolders()
+}
+
+async function exportNotes() {
+  const API = import.meta.env.VITE_API_URL || '/api'
+  const token = localStorage.getItem('token')
+  if (!token) return
+  const res = await fetch(`${API}/export`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  if (!res.ok) {
+    alert('导出失败')
+    return
+  }
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+  a.download = `sana_export_${date}.zip`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function triggerImport() {
+  importInput.value.click()
+}
+
+async function onImportFile(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  const API = import.meta.env.VITE_API_URL || '/api'
+  const token = localStorage.getItem('token')
+  const formData = new FormData()
+  formData.append('file', file)
+  let message = ''
+  try {
+    const res = await fetch(`${API}/import`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    })
+    const data = await res.json()
+    if (res.ok) {
+      const skipped = data.skipped && data.skipped.length > 0
+        ? `，${data.skipped.length} 个文件跳过`
+        : ''
+      message = `导入完成：${data.folders_imported} 个文件夹、${data.notes_imported} 个笔记${skipped}`
+      await refreshTree()
+    } else {
+      message = `导入失败：${data.error || res.status}`
+    }
+  } catch (e) {
+    message = `导入失败：${e.message}`
+  }
+  importMessage.value = message
+  setTimeout(() => { importMessage.value = '' }, 5000)
+  event.target.value = '' // reset so same file can be re-selected
+}
 
 onMounted(loadFolders)
 
@@ -43,14 +106,22 @@ async function deleteFolder(id, e) {
 function getChildren(parentId) {
   return folders.value.filter(f => f.parent_id === parentId)
 }
+
+defineExpose({ refreshTree })
 </script>
 
 <template>
   <div class="sidebar">
     <div class="sidebar-header">
       <span>文件夹</span>
-      <button @click="showNewFolder = !showNewFolder" title="新建文件夹">+</button>
+      <div class="sidebar-actions">
+        <button @click="exportNotes" title="导出所有笔记">↓</button>
+        <button @click="triggerImport" title="导入笔记">↑</button>
+        <button @click="showNewFolder = !showNewFolder" title="新建文件夹">+</button>
+      </div>
     </div>
+    <div v-if="importMessage" class="import-message">{{ importMessage }}</div>
+    <input ref="importInput" type="file" accept=".zip" style="display:none" @change="onImportFile" />
 
     <div v-if="showNewFolder" class="new-folder">
       <input v-model="newFolderName" placeholder="文件夹名称" @keyup.enter="createFolder" />
@@ -87,6 +158,23 @@ function getChildren(parentId) {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+.sidebar-actions { display: flex; gap: 4px; }
+.sidebar-actions button {
+  background: none;
+  border: none;
+  color: #4a9eff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+}
+.import-message {
+  font-size: 11px;
+  color: #888;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  background: #1a1a2e;
+  border-radius: 4px;
 }
 .sidebar-header button {
   background: none;
