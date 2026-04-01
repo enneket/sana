@@ -5,11 +5,11 @@
     </div>
     <div class="heatmap-grid">
       <div
-        v-for="(count, date) in heatmapData"
-        :key="date"
+        v-for="(count, index) in grid"
+        :key="index"
         class="heat-cell"
         :class="getLevel(count)"
-        :title="`${date}: ${count} 条`"
+        :title="getTitle(index, count)"
       />
     </div>
   </div>
@@ -25,6 +25,27 @@ const props = defineProps({
   }
 })
 
+// Generate 3 months of cells, aligned by week (Sun-Sat)
+const grid = computed(() => {
+  const result = []
+  const now = new Date()
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0) // last day of current month
+  const start = new Date(end)
+  start.setDate(end.getDate() - 89) // go back ~90 days
+
+  // Align to start of week (Sunday)
+  const startDay = start.getDay()
+  start.setDate(start.getDate() - startDay)
+
+  const current = new Date(start)
+  while (current <= end) {
+    const dateStr = current.toISOString().split('T')[0]
+    result.push(props.heatmap[dateStr] || 0)
+    current.setDate(current.getDate() + 1)
+  }
+  return result
+})
+
 const months = computed(() => {
   const now = new Date()
   const result = []
@@ -35,13 +56,24 @@ const months = computed(() => {
   return result
 })
 
-const heatmapData = computed(() => props.heatmap)
-
 function getLevel(count) {
   if (count === 0) return 'level-0'
   if (count === 1) return 'level-1'
   if (count === 2) return 'level-2'
   return 'level-3'
+}
+
+function getTitle(index, count) {
+  const now = new Date()
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  const start = new Date(end)
+  start.setDate(end.getDate() - 89)
+  const startDay = start.getDay()
+  start.setDate(start.getDate() - startDay)
+
+  const current = new Date(start)
+  current.setDate(current.getDate() + index)
+  return `${current.toLocaleDateString('zh-CN')} ${count} 条`
 }
 </script>
 
@@ -73,6 +105,7 @@ function getLevel(count) {
   background: #ebebeb;
 }
 
+.level-0 { background: #ebebeb; }
 .level-1 { background: #c3e8d1; }
 .level-2 { background: #7cd69e; }
 .level-3 { background: #2ecc71; }
