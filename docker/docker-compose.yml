@@ -5,9 +5,6 @@ services:
       dockerfile: docker/Dockerfile
     ports:
       - "8080:8080"
-    volumes:
-      - ../notes:/app/notes
-      - ../data:/app/data
     environment:
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - SANA_PASSWORD=${SANA_PASSWORD:?SANA_PASSWORD is required}
