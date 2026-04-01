@@ -2,13 +2,14 @@
   <div class="app-layout">
     <Sidebar />
     <main class="main-content">
-      <RouterView />
+      <TimelineView />
     </main>
   </div>
 </template>
 
 <script setup>
 import Sidebar from './Sidebar.vue'
+import TimelineView from '../views/TimelineView.vue'
 </script>
 
 <style scoped>
