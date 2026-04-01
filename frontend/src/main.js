@@ -9,7 +9,7 @@ const router = createRouter({
     { path: '/login', component: () => import('./views/Login.vue') },
     {
       path: '/',
-      component: () => import('./views/Layout.vue'),
+      component: () => import('./views/TimelineView.vue'),
       meta: { requiresAuth: true },
     }
   ]
