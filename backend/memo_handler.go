@@ -193,3 +193,38 @@ func handleDeleteMemo(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// handleGetStats handles GET /api/memos/stats
+func handleGetStats(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value("userID").(string)
+
+	var memoCount int
+	db.QueryRow(r.Context(),
+		"SELECT COUNT(*) FROM memos WHERE user_id = $1", userID).Scan(&memoCount)
+
+	var activeDays int
+	db.QueryRow(r.Context(),
+		"SELECT COUNT(DISTINCT DATE(created_at)) FROM memos WHERE user_id = $1", userID).Scan(&activeDays)
+
+	rows, _ := db.Query(r.Context(), `
+		SELECT DATE(created_at) as day, COUNT(*) as count
+		FROM memos
+		WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '90 days'
+		GROUP BY DATE(created_at)
+	`, userID)
+
+	heatmap := make(map[string]int)
+	for rows.Next() {
+		var day string
+		var count int
+		rows.Scan(&day, &count)
+		heatmap[day] = count
+	}
+	rows.Close()
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"memo_count":  memoCount,
+		"active_days": activeDays,
+		"heatmap":     heatmap,
+	})
+}

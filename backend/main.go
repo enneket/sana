@@ -75,6 +75,7 @@ func main() {
 	mux.HandleFunc("PUT /api/memos/", withCORS(withAuth(handleUpdateMemo)))
 	mux.HandleFunc("DELETE /api/memos/", withCORS(withAuth(handleDeleteMemo)))
 	mux.HandleFunc("GET /api/memos/search", withCORS(withAuth(handleSearchMemos)))
+	mux.HandleFunc("GET /api/memos/stats", withCORS(withAuth(handleGetStats)))
 
 	// Import/Export (Memos format)
 	mux.HandleFunc("GET /api/export/memos", withCORS(withAuth(handleExportMemos)))
