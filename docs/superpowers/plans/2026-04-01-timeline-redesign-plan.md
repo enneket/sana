@@ -1031,7 +1031,7 @@ async function saveMemo({ id, content }) {
   await api.updateMemo(id, content)
   const idx = memos.value.findIndex(m => m.id === id)
   if (idx >= 0) {
-    memos.value[idx] = { ...memos.value[idx], content })
+    memos.value[idx] = { ...memos.value[idx], content }
   }
   editingMemo.value = null
 }
