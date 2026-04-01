@@ -11,4 +11,25 @@ services:
     environment:
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - SANA_PASSWORD=${SANA_PASSWORD:?SANA_PASSWORD is required}
+      - DATABASE_URL=postgres://sana:${SANA_PASSWORD}@db:5432/sana?sslmode=disable
       - PORT=8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=sana
+      - POSTGRES_PASSWORD=${SANA_PASSWORD:?SANA_PASSWORD is required}
+      - POSTGRES_DB=sana
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sana"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
