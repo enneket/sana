@@ -39,5 +39,7 @@ onMounted(async () => {
   padding: 10px;
   border: 1px solid #eee;
   margin-top: 52px;
+  margin-left: auto;
+  margin-right: auto;
 }
 </style>
