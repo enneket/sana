@@ -38,10 +38,7 @@ async function submit() {
   border: 1px solid #e8e8e8;
   overflow: hidden;
   margin-bottom: 20px;
-  margin-left: auto;
-  margin-right: 0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  max-width: 500px;
 }
 
 .composer-input {
