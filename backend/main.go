@@ -38,6 +38,19 @@ func getJWTSecret() []byte {
 	return []byte(secret)
 }
 
+func withCORS(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next(w, r)
+	}
+}
+
 func main() {
 	notesDir := getEnv("NOTES_DIR", "./notes")
 	os.MkdirAll(notesDir, 0755)
@@ -51,21 +64,21 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Auth
-	mux.HandleFunc("POST /api/auth/login", handleLogin)
-	mux.HandleFunc("POST /api/auth/logout", handleLogout)
-	mux.HandleFunc("GET /api/auth/me", withAuth(handleMe))
+	mux.HandleFunc("POST /api/auth/login", withCORS(handleLogin))
+	mux.HandleFunc("POST /api/auth/logout", withCORS(handleLogout))
+	mux.HandleFunc("GET /api/auth/me", withCORS(withAuth(handleMe)))
 
 	// Memos (Timeline)
-	mux.HandleFunc("GET /api/memos", withAuth(handleListMemos))
-	mux.HandleFunc("POST /api/memos", withAuth(handleCreateMemo))
-	mux.HandleFunc("GET /api/memos/", withAuth(handleGetMemo))
-	mux.HandleFunc("PUT /api/memos/", withAuth(handleUpdateMemo))
-	mux.HandleFunc("DELETE /api/memos/", withAuth(handleDeleteMemo))
-	mux.HandleFunc("GET /api/memos/search", withAuth(handleSearchMemos))
+	mux.HandleFunc("GET /api/memos", withCORS(withAuth(handleListMemos)))
+	mux.HandleFunc("POST /api/memos", withCORS(withAuth(handleCreateMemo)))
+	mux.HandleFunc("GET /api/memos/", withCORS(withAuth(handleGetMemo)))
+	mux.HandleFunc("PUT /api/memos/", withCORS(withAuth(handleUpdateMemo)))
+	mux.HandleFunc("DELETE /api/memos/", withCORS(withAuth(handleDeleteMemo)))
+	mux.HandleFunc("GET /api/memos/search", withCORS(withAuth(handleSearchMemos)))
 
 	// Import/Export (Memos format)
-	mux.HandleFunc("GET /api/export/memos", withAuth(handleExportMemos))
-	mux.HandleFunc("POST /api/import/memos", withAuth(handleImportMemos))
+	mux.HandleFunc("GET /api/export/memos", withCORS(withAuth(handleExportMemos)))
+	mux.HandleFunc("POST /api/import/memos", withCORS(withAuth(handleImportMemos)))
 
 	// Serve Vue frontend (SPA)
 	spa := spaHandler{root: "frontend/dist"}
