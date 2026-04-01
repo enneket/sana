@@ -38,6 +38,6 @@ onMounted(async () => {
   border-radius: 8px;
   padding: 10px;
   border: 1px solid #eee;
-  margin-top: 38px;
+  margin-top: 52px;
 }
 </style>
