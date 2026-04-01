@@ -8,3 +8,4 @@ backend/sana
 backend/notes/
 notes/
 .gstack/
+.claude/

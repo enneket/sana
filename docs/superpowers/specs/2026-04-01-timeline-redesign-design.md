@@ -68,12 +68,22 @@ POST /api/import/memos
 
 #### 数据模型变更
 
-**新增 `memo` 结构（替代 `noteRecord`）：**
+**`memo` 结构（数据库模型）：**
 ```go
-type memo struct {
-    ID        string `json:"id"`
-    UID       string `json:"uid"`       // 用户可见的唯一标识
-    UserID    string `json:"user_id"`
+type Memo struct {
+    ID        int       `json:"id"`        // 数据库自增主键
+    UID       string    `json:"uid"`       // 用户可见的唯一标识（用于 API）
+    UserID    string    `json:"user_id"`
+    Content   string    `json:"content"`
+    CreatedAt time.Time `json:"created_at"`
+    UpdatedAt time.Time `json:"updated_at"`
+}
+```
+
+**API 响应格式（对外）：**
+```go
+type MemoResponse struct {
+    ID        string `json:"id"`        // 对外暴露 UID
     Content   string `json:"content"`
     CreatedTs int64  `json:"created_ts"`
     UpdatedTs int64  `json:"updated_ts"`
@@ -90,9 +100,41 @@ type memo struct {
 
 #### 存储
 
-- Memo 元数据：新增 `memos.json`
-- Memo 正文：存储在 `{userID}/memos/` 目录下的 `{uid}.md` 文件
-- 旧的 `notes/` 目录和 `folders.json` 保留，暂不迁移
+**PostgreSQL 数据库**
+
+通过 `DATABASE_URL` 环境变量配置连接：
+```
+postgres://user:password@host:5432/sana?sslmode=disable
+```
+
+**数据库 Schema**
+
+```sql
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE memos (
+    id SERIAL PRIMARY KEY,
+    uid TEXT UNIQUE NOT NULL,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    content TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_memos_user_id ON memos(user_id);
+CREATE INDEX idx_memos_updated_at ON memos(updated_at DESC);
+CREATE INDEX idx_memos_content_gin ON memos USING gin(to_tsvector('simple', content));
+```
+
+**迁移说明**
+- 启动时自动执行 schema 初始化（`CREATE TABLE IF NOT EXISTS`）
+- 旧数据（`notes/`、`folders.json`、`notes.json`）保留，暂不迁移
+- 未来提供一次性迁移脚本
 
 ### 前端变更
 
@@ -198,3 +240,12 @@ memos_20260401.zip
 - 旧数据（`notes/`、`folders.json`）保持只读
 - 未来提供迁移脚本，将旧数据导入 Timeline
 - 新接口与旧接口共存一段时间，逐步废弃旧接口
+
+## 环境变量
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `DATABASE_URL` | PostgreSQL 连接串 | **必须设置** |
+| `JWT_SECRET` | JWT 签名密钥 | **必须设置** |
+| `PORT` | 服务端口 | `8080` |
+| `SANA_PASSWORD` | 登录密码（首次启动创建默认用户） | **必须设置** |
