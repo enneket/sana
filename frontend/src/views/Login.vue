@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { apiFetch, setToken } from '../main.js'
+import api from '../api/index.js'
 
 const router = useRouter()
 const password = ref('')
@@ -10,11 +10,8 @@ const error = ref('')
 async function login() {
   error.value = ''
   try {
-    const data = await apiFetch('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ password: password.value })
-    })
-    setToken(data.token)
+    const data = await api.login(password.value)
+    localStorage.setItem('token', data.token)
     router.push('/')
   } catch (e) {
     error.value = '密码错误'

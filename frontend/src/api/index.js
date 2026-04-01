@@ -1,5 +1,28 @@
 const API_BASE = '/api'
 
+function getToken() {
+  return localStorage.getItem('token')
+}
+
+function fetchWithAuth(url, options = {}) {
+  const token = getToken()
+  const headers = options.headers || {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  return fetch(url, { ...options, headers })
+}
+
+function handleResponse(r) {
+  if (r.status === 401) {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+    throw new Error('unauthorized')
+  }
+  if (r.status === 204) return null
+  return r.json()
+}
+
 const api = {
   // Auth
   login: (password) => fetch(`${API_BASE}/auth/login`, {
@@ -8,42 +31,45 @@ const api = {
     headers: { 'Content-Type': 'application/json' },
   }).then(r => r.json()),
 
-  logout: () => fetch(`${API_BASE}/auth/logout`, { method: 'POST' }),
+  logout: () => {
+    localStorage.removeItem('token')
+    return fetch(`${API_BASE}/auth/logout`, { method: 'POST' })
+  },
 
-  me: () => fetch(`${API_BASE}/auth/me`).then(r => r.json()),
+  me: () => fetchWithAuth(`${API_BASE}/auth/me`).then(handleResponse),
 
   // Memos (Timeline)
   listMemos: (cursor) => {
     let url = `${API_BASE}/memos?limit=20`
     if (cursor) url += `&cursor=${cursor}`
-    return fetch(url).then(r => r.json())
+    return fetchWithAuth(url).then(handleResponse)
   },
 
-  createMemo: (content) => fetch(`${API_BASE}/memos`, {
+  createMemo: (content) => fetchWithAuth(`${API_BASE}/memos`, {
     method: 'POST',
     body: JSON.stringify({ content }),
     headers: { 'Content-Type': 'application/json' },
-  }).then(r => r.json()),
+  }).then(handleResponse),
 
-  getMemo: (id) => fetch(`${API_BASE}/memos/${id}`).then(r => r.json()),
+  getMemo: (id) => fetchWithAuth(`${API_BASE}/memos/${id}`).then(handleResponse),
 
-  updateMemo: (id, content) => fetch(`${API_BASE}/memos/${id}`, {
+  updateMemo: (id, content) => fetchWithAuth(`${API_BASE}/memos/${id}`, {
     method: 'PUT',
     body: JSON.stringify({ content }),
     headers: { 'Content-Type': 'application/json' },
-  }).then(r => r.json()),
+  }).then(handleResponse),
 
-  deleteMemo: (id) => fetch(`${API_BASE}/memos/${id}`, { method: 'DELETE' }),
+  deleteMemo: (id) => fetchWithAuth(`${API_BASE}/memos/${id}`, { method: 'DELETE' }).then(handleResponse),
 
-  searchMemos: (q) => fetch(`${API_BASE}/memos/search?q=${encodeURIComponent(q)}`)
-    .then(r => r.json()),
+  searchMemos: (q) => fetchWithAuth(`${API_BASE}/memos/search?q=${encodeURIComponent(q)}`)
+    .then(handleResponse),
 
-  exportMemos: () => fetch(`${API_BASE}/export/memos`).then(r => r.blob()),
+  exportMemos: () => fetchWithAuth(`${API_BASE}/export/memos`).then(r => r.blob()),
 
-  importMemos: (formData) => fetch(`${API_BASE}/import/memos`, {
+  importMemos: (formData) => fetchWithAuth(`${API_BASE}/import/memos`, {
     method: 'POST',
     body: formData,
-  }).then(r => r.json()),
+  }).then(handleResponse),
 }
 
 export default api
