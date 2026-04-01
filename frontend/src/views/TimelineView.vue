@@ -3,7 +3,7 @@
     <header class="timeline-header">
       <h1>Sana</h1>
       <div class="header-actions">
-        <button class="icon-btn" @click="showSearch = !showSearch" title="搜索">
+        <button class="icon-btn" @click="showSearchModal = true" title="搜索">
           🔍
         </button>
         <button class="icon-btn" @click="handleExport" title="导出">📤</button>
@@ -14,49 +14,33 @@
 
     <MemoComposer @created="onMemoCreated" />
 
-    <div v-if="showSearch" class="search-container">
-      <input
-        v-model="searchQuery"
-        class="search-input"
-        placeholder="搜索笔记..."
-        @input="debouncedSearch"
-      >
-    </div>
-
     <div v-if="loading" class="loading">加载中...</div>
 
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <div v-else class="memo-list">
-      <template v-if="searchMode">
-        <div v-if="searchResults.length === 0" class="empty">
-          未找到匹配 "{{ searchQuery }}" 的笔记
-        </div>
-        <MemoCard
-          v-for="memo in searchResults"
-          :key="memo.id"
-          :memo="memo"
-          @edit="editMemo"
-          @delete="deleteMemo"
-        />
-      </template>
-      <template v-else>
-        <div v-if="groupedMemos.length === 0" class="empty">
-          还没有笔记，写下第一条吧 ✨
-        </div>
-        <TimeGroup
-          v-for="group in groupedMemos"
-          :key="group.label"
-          :label="group.label"
-          :memos="group.memos"
-          @edit="editMemo"
-          @delete="deleteMemo"
-        />
-        <button v-if="hasMore" class="load-more" @click="loadMore">
-          加载更多
-        </button>
-      </template>
+      <div v-if="groupedMemos.length === 0" class="empty">
+        还没有笔记，写下第一条吧 ✨
+      </div>
+      <TimeGroup
+        v-for="group in groupedMemos"
+        :key="group.label"
+        :label="group.label"
+        :memos="group.memos"
+        @edit="editMemo"
+        @delete="deleteMemo"
+      />
+      <button v-if="hasMore" class="load-more" @click="loadMore">
+        加载更多
+      </button>
     </div>
+
+    <SearchModal
+      v-if="showSearchModal"
+      :show="showSearchModal"
+      @close="showSearchModal = false"
+      @select="onSearchSelect"
+    />
 
     <MemoEditor
       v-if="editingMemo"
@@ -73,6 +57,7 @@ import MemoComposer from '../components/MemoComposer.vue'
 import MemoCard from '../components/MemoCard.vue'
 import MemoEditor from '../components/MemoEditor.vue'
 import TimeGroup from '../components/TimeGroup.vue'
+import SearchModal from '../components/SearchModal.vue'
 import api from '../api/index.js'
 
 const memos = ref([])
@@ -80,13 +65,9 @@ const loading = ref(false)
 const error = ref(null)
 const cursor = ref(null)
 const hasMore = ref(false)
-const showSearch = ref(false)
-const searchQuery = ref('')
-const searchResults = ref([])
-const searchMode = ref(false)
+const showSearchModal = ref(false)
 const editingMemo = ref(null)
 const fileInput = ref(null)
-let searchTimer = null
 
 const groupedMemos = computed(() => {
   const now = new Date()
@@ -163,28 +144,9 @@ async function deleteMemo(id) {
   memos.value = memos.value.filter(m => m.id !== id)
 }
 
-function debouncedSearch() {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(doSearch, 300)
-}
-
-async function doSearch() {
-  const q = searchQuery.value.trim()
-  if (!q) {
-    searchMode.value = false
-    searchResults.value = []
-    return
-  }
-  searchMode.value = true
-  loading.value = true
-  try {
-    const data = await api.searchMemos(q)
-    searchResults.value = data.memos || []
-  } catch (e) {
-    error.value = '搜索失败'
-  } finally {
-    loading.value = false
-  }
+function onSearchSelect(memo) {
+  showSearchModal.value = false
+  editMemo(memo)
 }
 
 async function handleExport() {
@@ -254,18 +216,6 @@ onMounted(() => loadMemos())
 
 .icon-btn:hover {
   background: #f0f0f0;
-}
-
-.search-container {
-  margin-bottom: 16px;
-}
-
-.search-input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
 }
 
 .loading, .error, .empty {
