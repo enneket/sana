@@ -55,17 +55,14 @@ func main() {
 	mux.HandleFunc("POST /api/auth/logout", handleLogout)
 	mux.HandleFunc("GET /api/auth/me", withAuth(handleMe))
 
-	// Memos (Timeline) - handlers implemented in separate files
-	// mux.HandleFunc("GET /api/memos", withAuth(handleListMemos))
-	// mux.HandleFunc("POST /api/memos", withAuth(handleCreateMemo))
-	// mux.HandleFunc("GET /api/memos/", withAuth(handleGetMemo))
-	// mux.HandleFunc("PUT /api/memos/", withAuth(handleUpdateMemo))
-	// mux.HandleFunc("DELETE /api/memos/", withAuth(handleDeleteMemo))
-	// mux.HandleFunc("GET /api/memos/search", withAuth(handleSearchMemos))
+	// Memos (Timeline)
+	mux.HandleFunc("GET /api/memos", withAuth(handleListMemos))
+	mux.HandleFunc("POST /api/memos", withAuth(handleCreateMemo))
+	mux.HandleFunc("GET /api/memos/", withAuth(handleGetMemo))
+	mux.HandleFunc("PUT /api/memos/", withAuth(handleUpdateMemo))
+	mux.HandleFunc("DELETE /api/memos/", withAuth(handleDeleteMemo))
 
-	// Import/Export (Memos format)
-	// mux.HandleFunc("GET /api/export/memos", withAuth(handleExportMemos))
-	// mux.HandleFunc("POST /api/import/memos", withAuth(handleImportMemos))
+	// Import/Export (Memos format) - pending implementation
 
 	// Serve Vue frontend (SPA)
 	spa := spaHandler{root: "frontend/dist"}
