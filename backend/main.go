@@ -63,7 +63,9 @@ func main() {
 	mux.HandleFunc("DELETE /api/memos/", withAuth(handleDeleteMemo))
 	mux.HandleFunc("GET /api/memos/search", withAuth(handleSearchMemos))
 
-	// Import/Export (Memos format) - pending implementation
+	// Import/Export (Memos format)
+	mux.HandleFunc("GET /api/export/memos", withAuth(handleExportMemos))
+	mux.HandleFunc("POST /api/import/memos", withAuth(handleImportMemos))
 
 	// Serve Vue frontend (SPA)
 	spa := spaHandler{root: "frontend/dist"}
