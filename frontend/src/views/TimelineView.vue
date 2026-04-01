@@ -1,17 +1,5 @@
 <template>
   <div class="timeline-view">
-    <header class="timeline-header">
-      <h1>Sana</h1>
-      <div class="header-actions">
-        <button class="icon-btn" @click="showSearchModal = true" title="搜索">
-          🔍
-        </button>
-        <button class="icon-btn" @click="handleExport" title="导出">📤</button>
-        <button class="icon-btn" @click="fileInput.click()" title="导入">📥</button>
-        <input ref="fileInput" type="file" accept=".zip" style="display:none" @change="handleImport">
-      </div>
-    </header>
-
     <MemoComposer @created="onMemoCreated" />
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -186,36 +174,6 @@ onMounted(() => loadMemos())
   max-width: 700px;
   margin: 0 auto;
   padding: 16px;
-}
-
-.timeline-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.timeline-header h1 {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.header-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.icon-btn:hover {
-  background: #f0f0f0;
 }
 
 .loading, .error, .empty {
