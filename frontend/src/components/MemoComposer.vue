@@ -4,7 +4,7 @@
       v-model="content"
       class="composer-input"
       placeholder="写下此刻的想法..."
-      rows="2"
+      rows="4"
       @keydown.enter.ctrl="submit"
     ></textarea>
     <div class="composer-footer">
@@ -34,22 +34,23 @@ async function submit() {
 <style scoped>
 .memo-composer {
   background: #fff;
-  border-radius: 10px;
-  border: 1px solid #e8e8e8;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
   overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  margin-bottom: 24px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
 .composer-input {
   width: 100%;
-  padding: 14px 16px;
+  min-height: 120px;
+  padding: 0;
   border: none;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   resize: none;
-  box-sizing: border-box;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .composer-input:focus {
@@ -63,28 +64,29 @@ async function submit() {
 .composer-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 8px 12px;
-  border-top: 1px solid #f0f0f0;
+  margin-top: 16px;
 }
 
 .composer-btn {
-  padding: 8px 20px;
-  background: #2ecc71;
-  color: white;
+  padding: 10px 24px;
+  background: #f0f0f0;
+  color: #ccc;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
-  transition: background 0.15s;
+  transition: all 0.15s;
 }
 
-.composer-btn:hover {
-  background: #27ae60;
+.composer-btn:hover:not(:disabled) {
+  background: #2ecc71;
+  color: white;
 }
 
 .composer-btn:disabled {
-  background: #ccc;
+  background: #f0f0f0;
+  color: #ccc;
   cursor: not-allowed;
 }
 </style>

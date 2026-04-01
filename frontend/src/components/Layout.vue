@@ -22,6 +22,6 @@ import TimelineView from '../views/TimelineView.vue'
 .main-content {
   flex: 1;
   overflow-y: auto;
-  background: #f7f7f7;
+  padding: 0 40px;
 }
 </style>

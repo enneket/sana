@@ -1,12 +1,12 @@
 <template>
   <div class="timeline-view">
     <div class="top-bar">
-      <button class="icon-btn" @click="showSearchModal = true" title="搜索">
-        🔍
-      </button>
-      <button class="icon-btn" @click="handleExport" title="导出">📤</button>
-      <button class="icon-btn" @click="fileInput.click()" title="导入">📥</button>
-      <input ref="fileInput" type="file" accept=".zip" style="display:none" @change="handleImport">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <button class="icon-btn" @click="showSearchModal = true" title="搜索">
+          Ctrl+K
+        </button>
+      </div>
     </div>
 
     <MemoComposer @created="onMemoCreated" />
@@ -180,37 +180,47 @@ onMounted(() => loadMemos())
 
 <style scoped>
 .timeline-view {
-  padding: 24px 20px 24px 0;
-  max-width: calc(100vw - 180px);
+  padding-top: 24px;
 }
 
 .top-bar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
   justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.search-box {
+  background: #ededed;
+  border-radius: 12px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 280px;
+}
+
+.search-icon {
+  font-size: 14px;
 }
 
 .icon-btn {
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: 12px;
+  color: #999;
   cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 6px;
-  opacity: 0.6;
-  transition: opacity 0.15s;
+  padding: 0;
+  margin-left: auto;
 }
 
 .icon-btn:hover {
-  opacity: 1;
-  background: #eee;
+  color: #666;
 }
 
 .loading, .error, .empty {
   text-align: center;
-  padding: 32px;
-  color: #999;
+  padding: 40px 0;
+  color: #bbb;
   font-size: 14px;
 }
 
@@ -227,12 +237,13 @@ onMounted(() => loadMemos())
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
-  color: #666;
+  color: #999;
   transition: all 0.15s;
 }
 
 .load-more:hover {
   background: #f7f7f7;
   border-color: #ddd;
+  color: #666;
 }
 </style>

@@ -89,8 +89,8 @@ function getTitle(index, count) {
 
 .heatmap-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 3px;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 4px;
 }
 
 .heat-cell {

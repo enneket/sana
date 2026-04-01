@@ -24,11 +24,11 @@ onMounted(async () => {
 
 <style scoped>
 .sidebar {
-  width: 180px;
-  min-width: 180px;
-  padding: 24px 12px;
+  width: 300px;
+  min-width: 300px;
+  padding: 24px 16px;
   background: #f7f7f7;
-  border-right: 1px solid #e8e8e8;
+  border-right: 1px solid #e5e5e5;
   height: 100vh;
   overflow-y: auto;
 }
@@ -36,7 +36,7 @@ onMounted(async () => {
 .heatmap-section {
   background: #fff;
   border-radius: 8px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid #eee;
 }
 </style>

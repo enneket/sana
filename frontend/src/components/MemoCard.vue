@@ -30,23 +30,18 @@ function formatTime(ts) {
 <style scoped>
 .memo-card {
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  transition: box-shadow 0.15s;
-}
-
-.memo-card:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
 }
 
 .memo-content {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
   color: #333;
 }
 
@@ -57,7 +52,7 @@ function formatTime(ts) {
 }
 
 .memo-time {
-  font-size: 12px;
+  font-size: 13px;
   color: #999;
 }
 
