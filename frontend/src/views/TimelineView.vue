@@ -180,8 +180,8 @@ onMounted(() => loadMemos())
 
 <style scoped>
 .timeline-view {
-  padding: 24px 20px;
-  max-width: 660px;
+  padding: 24px 20px 24px 0;
+  max-width: calc(100vw - 180px);
 }
 
 .top-bar {
