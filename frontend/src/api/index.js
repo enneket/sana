@@ -64,6 +64,8 @@ const api = {
   searchMemos: (q) => fetchWithAuth(`${API_BASE}/memos/search?q=${encodeURIComponent(q)}`)
     .then(handleResponse),
 
+  getStats: () => fetchWithAuth(`${API_BASE}/memos/stats`).then(handleResponse),
+
   exportMemos: () => fetchWithAuth(`${API_BASE}/export/memos`).then(r => r.blob()),
 
   importMemos: (formData) => fetchWithAuth(`${API_BASE}/import/memos`, {
