@@ -1,11 +1,9 @@
 <template>
   <div class="timeline-view">
     <div class="top-bar">
-      <div class="search-box">
+      <div class="search-box" @click="showSearchModal = true">
         <span class="search-icon">🔍</span>
-        <button class="icon-btn" @click="showSearchModal = true" title="搜索">
-          Ctrl+K
-        </button>
+        <span class="search-placeholder">Ctrl+K</span>
       </div>
     </div>
 
@@ -197,24 +195,21 @@ onMounted(() => loadMemos())
   align-items: center;
   gap: 8px;
   width: 280px;
+  cursor: pointer;
 }
 
 .search-icon {
   font-size: 14px;
 }
 
-.icon-btn {
-  background: none;
-  border: none;
+.search-placeholder {
   font-size: 12px;
   color: #999;
-  cursor: pointer;
-  padding: 0;
   margin-left: auto;
 }
 
-.icon-btn:hover {
-  color: #666;
+.search-box:hover {
+  background: #e8e8e8;
 }
 
 .loading, .error, .empty {
