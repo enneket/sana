@@ -1,12 +1,5 @@
 <template>
   <div class="timeline-view">
-    <div class="top-bar">
-      <div class="search-box" @click="showSearchModal = true">
-        <span class="search-icon">🔍</span>
-        <span class="search-placeholder">Ctrl+K</span>
-      </div>
-    </div>
-
     <MemoComposer @created="onMemoCreated" />
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -174,42 +167,25 @@ async function handleImport(e) {
 }
 
 onMounted(() => loadMemos())
+
+function triggerImport() {
+  fileInput.value?.click()
+}
+
+function openSearch() {
+  showSearchModal.value = true
+}
+
+defineExpose({
+  openSearch,
+  handleExport,
+  triggerImport
+})
 </script>
 
 <style scoped>
 .timeline-view {
   padding-top: 24px;
-}
-
-.top-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 24px;
-}
-
-.search-box {
-  background: #ededed;
-  border-radius: 12px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 280px;
-  cursor: pointer;
-}
-
-.search-icon {
-  font-size: 14px;
-}
-
-.search-placeholder {
-  font-size: 12px;
-  color: #999;
-  margin-left: auto;
-}
-
-.search-box:hover {
-  background: #e8e8e8;
 }
 
 .loading, .error, .empty {
