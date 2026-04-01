@@ -53,7 +53,7 @@ function getLevel(count) {
 .heatmap-months {
   display: flex;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   color: #999;
 }
 
@@ -64,16 +64,16 @@ function getLevel(count) {
 .heatmap-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
+  gap: 3px;
 }
 
 .heat-cell {
   aspect-ratio: 1;
   border-radius: 2px;
-  background: #ebedf0;
+  background: #ebebeb;
 }
 
-.level-1 { background: #9be9a8; }
-.level-2 { background: #40c463; }
-.level-3 { background: #30a14e; }
+.level-1 { background: #c3e8d1; }
+.level-2 { background: #7cd69e; }
+.level-3 { background: #2ecc71; }
 </style>

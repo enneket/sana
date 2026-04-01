@@ -11,6 +11,7 @@
       </div>
     </div>
     <div class="heatmap-section">
+      <div class="heatmap-title">活动热力图</div>
       <Heatmap :heatmap="stats.heatmap || {}" />
     </div>
   </aside>
@@ -36,17 +37,17 @@ onMounted(async () => {
 .sidebar {
   width: 240px;
   min-width: 240px;
-  padding: 16px;
-  background: #fafafa;
-  border-right: 1px solid #eee;
+  padding: 20px 16px;
+  background: #f5f5f5;
+  border-right: 1px solid #e8e8e8;
   height: 100vh;
   overflow-y: auto;
 }
 
 .stats {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .stat-item {
@@ -55,17 +56,28 @@ onMounted(async () => {
 }
 
 .stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: #3D3830;
+  font-size: 28px;
+  font-weight: 500;
+  color: #333;
+  line-height: 1.2;
 }
 
 .stat-label {
   font-size: 12px;
   color: #999;
+  margin-top: 2px;
 }
 
 .heatmap-section {
-  margin-top: 16px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #eee;
+}
+
+.heatmap-title {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 8px;
 }
 </style>

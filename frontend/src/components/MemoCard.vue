@@ -29,19 +29,26 @@ function formatTime(ts) {
 
 <style scoped>
 .memo-card {
-  background: white;
-  border: 1px solid #e5e5e5;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 8px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: box-shadow 0.15s;
+}
+
+.memo-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .memo-content {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  color: #333;
 }
 
 .memo-meta {
@@ -58,6 +65,12 @@ function formatTime(ts) {
 .memo-actions {
   display: flex;
   gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.memo-card:hover .memo-actions {
+  opacity: 1;
 }
 
 .action-btn {
@@ -65,7 +78,7 @@ function formatTime(ts) {
   border: none;
   font-size: 14px;
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 4px 8px;
   border-radius: 4px;
 }
 
