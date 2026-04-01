@@ -26,7 +26,7 @@ onMounted(async () => {
 .sidebar {
   width: 180px;
   min-width: 180px;
-  padding: 0 12px;
+  padding: 24px 12px;
   background: #f7f7f7;
   border-right: 1px solid #e8e8e8;
   height: 100vh;
@@ -38,6 +38,5 @@ onMounted(async () => {
   border-radius: 8px;
   padding: 10px;
   border: 1px solid #eee;
-  margin-top: 52px;
 }
 </style>
