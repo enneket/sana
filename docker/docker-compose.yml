@@ -4,7 +4,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
     ports:
-      - "8080:8080"
+      - "5560:8080"
     environment:
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - SANA_PASSWORD=${SANA_PASSWORD:?SANA_PASSWORD is required}
