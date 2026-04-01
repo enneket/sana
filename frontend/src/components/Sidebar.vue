@@ -24,9 +24,9 @@ onMounted(async () => {
 
 <style scoped>
 .sidebar {
-  width: 220px;
-  min-width: 220px;
-  padding: 20px 14px;
+  width: 180px;
+  min-width: 180px;
+  padding: 20px 12px;
   background: #f7f7f7;
   border-right: 1px solid #e8e8e8;
   height: 100vh;
@@ -36,7 +36,7 @@ onMounted(async () => {
 .heatmap-section {
   background: #fff;
   border-radius: 8px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid #eee;
 }
 </style>
