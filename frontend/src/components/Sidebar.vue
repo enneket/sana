@@ -35,10 +35,10 @@ onMounted(async () => {
 
 <style scoped>
 .sidebar {
-  width: 240px;
-  min-width: 240px;
-  padding: 20px 16px;
-  background: #f5f5f5;
+  width: 220px;
+  min-width: 220px;
+  padding: 20px 14px;
+  background: #f7f7f7;
   border-right: 1px solid #e8e8e8;
   height: 100vh;
   overflow-y: auto;
@@ -46,7 +46,7 @@ onMounted(async () => {
 
 .stats {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 20px;
 }
 
@@ -56,10 +56,10 @@ onMounted(async () => {
 }
 
 .stat-value {
-  font-size: 28px;
-  font-weight: 500;
+  font-size: 32px;
+  font-weight: 400;
   color: #333;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
 .stat-label {

@@ -4,12 +4,14 @@
       v-model="content"
       class="composer-input"
       placeholder="写下此刻的想法..."
-      rows="2"
+      rows="3"
       @keydown.enter.ctrl="submit"
     ></textarea>
-    <button class="composer-btn" @click="submit" :disabled="!content.trim()">
-      创建
-    </button>
+    <div class="composer-footer">
+      <button class="composer-btn" @click="submit" :disabled="!content.trim()">
+        发送
+      </button>
+    </div>
   </div>
 </template>
 
@@ -31,35 +33,46 @@ async function submit() {
 
 <style scoped>
 .memo-composer {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  align-items: flex-end;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e8e8e8;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .composer-input {
-  flex: 1;
-  padding: 12px 14px;
-  border: 1px solid #e8e8e8;
-  border-radius: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
   font-size: 14px;
   font-family: inherit;
   resize: none;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-sizing: border-box;
+  line-height: 1.5;
 }
 
 .composer-input:focus {
   outline: none;
-  border-color: #2ecc71;
+}
+
+.composer-input::placeholder {
+  color: #ccc;
+}
+
+.composer-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 12px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .composer-btn {
-  padding: 10px 20px;
+  padding: 8px 20px;
   background: #2ecc71;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;

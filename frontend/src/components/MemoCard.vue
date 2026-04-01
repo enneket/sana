@@ -34,12 +34,11 @@ function formatTime(ts) {
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   transition: box-shadow 0.15s;
 }
 
 .memo-card:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .memo-content {
@@ -80,6 +79,7 @@ function formatTime(ts) {
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
+  color: #666;
 }
 
 .action-btn:hover {
@@ -88,5 +88,6 @@ function formatTime(ts) {
 
 .action-btn.delete:hover {
   background: #fee;
+  color: #e74c3c;
 }
 </style>

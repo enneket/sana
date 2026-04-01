@@ -1,5 +1,14 @@
 <template>
   <div class="timeline-view">
+    <div class="top-bar">
+      <button class="icon-btn" @click="showSearchModal = true" title="搜索">
+        🔍
+      </button>
+      <button class="icon-btn" @click="handleExport" title="导出">📤</button>
+      <button class="icon-btn" @click="fileInput.click()" title="导入">📥</button>
+      <input ref="fileInput" type="file" accept=".zip" style="display:none" @change="handleImport">
+    </div>
+
     <MemoComposer @created="onMemoCreated" />
 
     <div v-if="loading" class="loading">加载中...</div>
@@ -171,32 +180,60 @@ onMounted(() => loadMemos())
 
 <style scoped>
 .timeline-view {
-  max-width: 700px;
+  padding: 24px 32px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 16px;
+}
+
+.top-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.icon-btn:hover {
+  opacity: 1;
+  background: #eee;
 }
 
 .loading, .error, .empty {
   text-align: center;
   padding: 32px;
-  color: #666;
+  color: #999;
+  font-size: 14px;
 }
 
 .error {
-  color: #d00;
+  color: #e74c3c;
 }
 
 .load-more {
   display: block;
-  margin: 16px auto;
-  padding: 8px 24px;
-  background: #f0f0f0;
-  border: none;
+  margin: 20px auto;
+  padding: 10px 24px;
+  background: #fff;
+  border: 1px solid #eee;
   border-radius: 8px;
   cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.15s;
 }
 
 .load-more:hover {
-  background: #e0e0e0;
+  background: #f7f7f7;
+  border-color: #ddd;
 }
 </style>
