@@ -40,8 +40,8 @@ const props = defineProps({
 
 const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
-// 7 columns (days) x 12 rows (weeks)
-// Column-major order: each column is one week, dates increase top to bottom
+// 12 columns (weeks) x 7 rows (days)
+// CSS grid column-major fills each column with one week's data
 const grid = computed(() => {
   const result = []
   const today = new Date()
@@ -51,9 +51,9 @@ const grid = computed(() => {
   const start = new Date(today)
   start.setDate(today.getDate() - 11 * 7 - today.getDay())
 
-  // column-major: day outer, week inner -> 7 cols x 12 rows
-  for (let day = 0; day < 7; day++) {
-    for (let week = 0; week < 12; week++) {
+  // week outer, day inner -> CSS column-major makes each column one week
+  for (let week = 0; week < 12; week++) {
+    for (let day = 0; day < 7; day++) {
       const current = new Date(start)
       current.setDate(start.getDate() + week * 7 + day)
       const dateStr = current.toISOString().split('T')[0]
@@ -93,18 +93,19 @@ function getLevel(count) {
   return 'level-3'
 }
 
-// grid is 7 columns (days) x 12 rows (weeks), column-major
+// grid is 12 columns (weeks) x 7 rows (days), column-major filled
+// col = week index, row = day index
 function getTitle(index, count) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const start = new Date(today)
   start.setDate(today.getDate() - 11 * 7 - today.getDay())
 
-  // column-major: col = day index, row = week index
-  const col = Math.floor(index / 12)
-  const row = index % 12
+  // col = week, row = day (CSS column-major: each column is one week)
+  const col = Math.floor(index / 7)
+  const row = index % 7
   const current = new Date(start)
-  current.setDate(start.getDate() + row * 7 + col)
+  current.setDate(start.getDate() + col * 7 + row)
   return `${current.toLocaleDateString('zh-CN')} ${count} 条`
 }
 </script>
@@ -139,8 +140,8 @@ function getTitle(index, count) {
 
 .heatmap-grid {
   display: grid;
-  grid-template-columns: repeat(7, 14px);
-  grid-template-rows: repeat(12, 14px);
+  grid-template-columns: repeat(12, 14px);
+  grid-template-rows: repeat(7, 14px);
   gap: 3px;
 }
 
@@ -156,7 +157,7 @@ function getTitle(index, count) {
 
 .heatmap-months {
   display: grid;
-  grid-template-columns: repeat(7, 14px);
+  grid-template-columns: repeat(12, 14px);
   gap: 3px;
 }
 
