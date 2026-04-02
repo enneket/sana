@@ -1,16 +1,18 @@
 <template>
   <div class="heatmap">
-    <div class="heatmap-grid">
-      <div
-        v-for="(count, index) in grid"
-        :key="index"
-        class="heat-cell"
-        :class="getLevel(count)"
-        :title="getTitle(index, count)"
-      />
-    </div>
-    <div class="heatmap-months">
-      <span v-for="m in months" :key="m" class="month-label">{{ m }}</span>
+    <div class="heatmap-with-months">
+      <div class="heatmap-months-left">
+        <span v-for="m in months" :key="m" class="month-label">{{ m }}</span>
+      </div>
+      <div class="heatmap-grid">
+        <div
+          v-for="(count, index) in grid"
+          :key="index"
+          class="heat-cell"
+          :class="getLevel(count)"
+          :title="getTitle(index, count)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -47,18 +49,15 @@ const grid = computed(() => {
   return result
 })
 
+// Months displayed vertically (top to bottom)
 const months = computed(() => {
   const now = new Date()
   const result = []
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth(), 1)
-    d.setMonth(d.getMonth() - Math.floor(i * 12 / 12))
-    const idx = Math.floor(i * 12 / 12)
-    if (result.length === 0 || result[result.length - 1].idx !== idx) {
-      result.push({ label: d.toLocaleDateString('zh-CN', { month: 'short' }), idx })
-    }
+  for (let i = 2; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    result.push(d.toLocaleDateString('zh-CN', { month: 'short' }))
   }
-  return result.map(r => r.label).slice(-3)
+  return result
 })
 
 function getLevel(count) {
@@ -87,14 +86,33 @@ function getTitle(index, count) {
   font-size: 10px;
 }
 
-.heatmap-grid {
-  display: grid;
-  grid-template-columns: repeat(13, 1fr);
+.heatmap-with-months {
+  display: flex;
   gap: 4px;
 }
 
+.heatmap-months-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.month-label {
+  color: #999;
+  height: 14px;
+  line-height: 14px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 14px);
+  grid-template-rows: repeat(7, 14px);
+  gap: 3px;
+}
+
 .heat-cell {
-  aspect-ratio: 1;
   border-radius: 2px;
   background: #ebebeb;
 }
@@ -103,15 +121,4 @@ function getTitle(index, count) {
 .level-1 { background: #c3e8d1; }
 .level-2 { background: #7cd69e; }
 .level-3 { background: #2ecc71; }
-
-.heatmap-months {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
-  color: #999;
-}
-
-.month-label {
-  flex: 1;
-}
 </style>
