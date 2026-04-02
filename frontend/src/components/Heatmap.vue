@@ -140,8 +140,8 @@ function getTitle(index, count) {
 
 .heatmap-grid {
   display: grid;
-  grid-template-columns: repeat(12, 14px);
-  grid-template-rows: repeat(7, 14px);
+  grid-template-columns: repeat(7, 14px);
+  grid-template-rows: repeat(12, 14px);
   gap: 3px;
 }
 
@@ -157,7 +157,7 @@ function getTitle(index, count) {
 
 .heatmap-months {
   display: grid;
-  grid-template-columns: repeat(12, 14px);
+  grid-template-columns: repeat(7, 14px);
   gap: 3px;
 }
 
