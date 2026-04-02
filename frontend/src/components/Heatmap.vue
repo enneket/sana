@@ -59,7 +59,7 @@ const today = computed(() => {
 // 计算起始日期（3个月前的周日）
 const startDate = computed(() => {
   const d = new Date(today.value)
-  // 3个月前
+  // 3个月前 (用setUTCMonth)
   d.setUTCMonth(d.getUTCMonth() - 3)
   // 回滚到周日
   d.setUTCDate(d.getUTCDate() - d.getUTCDay())
@@ -68,7 +68,8 @@ const startDate = computed(() => {
 
 // 总周数（从起始周到今天）
 const totalWeeks = computed(() => {
-  const days = Math.ceil((today.value.getTime() - startDate.value.getTime()) / (7 * 24 * 60 * 60 * 1000))
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000
+  const days = Math.ceil((today.value.getTime() - startDate.value.getTime()) / msPerWeek)
   return days
 })
 
@@ -76,10 +77,13 @@ const totalWeeks = computed(() => {
 const cells = computed(() => {
   const result = []
   const s = startDate.value
+  const t = today.value
   for (let week = 0; week < totalWeeks.value; week++) {
     for (let day = 0; day < 7; day++) {
       const d = new Date(s)
       d.setUTCDate(s.getUTCDate() + week * 7 + day)
+      // 只显示到今天
+      if (d > t) continue
       const dateStr = d.toISOString().split('T')[0]
       result.push({ count: props.heatmap[dateStr] || 0, dateStr })
     }
@@ -96,7 +100,9 @@ const monthPositions = computed(() => {
   for (let week = 0; week < totalWeeks.value; week++) {
     const d = new Date(s)
     d.setUTCDate(s.getUTCDate() + week * 7)
-    const month = d.toLocaleDateString('zh-CN', { month: 'short', timeZone: 'UTC' })
+    const monthStr = d.toLocaleDateString('zh-CN', { month: 'short', timeZone: 'UTC' })
+    // 去掉重复的"月"字
+    const month = monthStr.replace('月月', '月')
     if (month !== lastMonth) {
       result.push({ label: month, x: week * (CELL + GAP) })
       lastMonth = month
@@ -147,6 +153,7 @@ function getLevel(count) {
   position: relative;
   height: 14px;
   margin-bottom: 4px;
+  overflow: visible;
 }
 
 .month-label {
