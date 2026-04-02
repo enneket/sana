@@ -25,7 +25,7 @@ const props = defineProps({
   }
 })
 
-// 7 columns (days) x 12 rows (weeks)
+// 7 columns (days) x 12 rows (weeks), matching CSS grid row-major order
 const grid = computed(() => {
   const result = []
   const now = new Date()
@@ -35,11 +35,11 @@ const grid = computed(() => {
   const start = new Date(today)
   start.setDate(today.getDate() - 11 * 7 - today.getDay())
 
-  // Generate 7 columns x 12 rows
-  for (let row = 0; row < 7; row++) {
-    for (let col = 0; col < 12; col++) {
+  // Generate: row (weeks) outer, col (days) inner -> matches CSS grid row-major
+  for (let week = 0; week < 12; week++) {
+    for (let day = 0; day < 7; day++) {
       const current = new Date(start)
-      current.setDate(start.getDate() + col * 7 + row)
+      current.setDate(start.getDate() + week * 7 + day)
       const dateStr = current.toISOString().split('T')[0]
       result.push(props.heatmap[dateStr] || 0)
     }
@@ -71,10 +71,11 @@ function getTitle(index, count) {
   const start = new Date(today)
   start.setDate(today.getDate() - 11 * 7 - today.getDay())
 
-  const row = index % 7
-  const col = Math.floor(index / 7)
+  // grid is 7 columns (days) x 12 rows (weeks), row-major order
+  const col = index % 7
+  const row = Math.floor(index / 7)
   const current = new Date(start)
-  current.setDate(start.getDate() + col * 7 + row)
+  current.setDate(start.getDate() + row * 7 + col)
   return `${current.toLocaleDateString('zh-CN')} ${count} 条`
 }
 </script>
