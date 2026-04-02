@@ -207,7 +207,7 @@ func handleGetStats(w http.ResponseWriter, r *http.Request) {
 		"SELECT COUNT(DISTINCT DATE(created_at)) FROM memos WHERE user_id = $1", userID).Scan(&activeDays)
 
 	rows, _ := db.Query(r.Context(), `
-		SELECT DATE(created_at) as day, COUNT(*) as count
+		SELECT DATE(created_at)::text as day, COUNT(*) as count
 		FROM memos
 		WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '90 days'
 		GROUP BY DATE(created_at)

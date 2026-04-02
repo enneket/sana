@@ -45,7 +45,6 @@ const props = defineProps({
   heatmap: { type: Object, default: () => ({}) }
 })
 
-const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const CELL = 14
 const GAP = 3
 
@@ -56,17 +55,28 @@ const today = computed(() => {
   return d
 })
 
-// 计算起始日期（90天前的周日）
+// 起始日期（90天前，不对齐到周日）
 const startDate = computed(() => {
   const d = new Date(today.value)
-  // 90天前
   d.setUTCDate(d.getUTCDate() - 90)
-  // 回滚到周日
-  d.setUTCDate(d.getUTCDate() - d.getUTCDay())
   return d
 })
 
-// 总周数（从起始周到今天）
+// 起始日是周几 -> 决定左侧标签从哪天开始
+const startDayOfWeek = computed(() => startDate.value.getUTCDay())
+
+// 动态星期标签，从起始日那天开始
+const dayLabels = computed(() => {
+  const labels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const start = startDayOfWeek.value
+  const result = []
+  for (let i = 0; i < 7; i++) {
+    result.push(labels[(start + i) % 7])
+  }
+  return result
+})
+
+// 总周数
 const totalWeeks = computed(() => {
   const msPerWeek = 7 * 24 * 60 * 60 * 1000
   const days = Math.ceil((today.value.getTime() - startDate.value.getTime()) / msPerWeek)
@@ -101,7 +111,6 @@ const monthPositions = computed(() => {
     const d = new Date(s)
     d.setUTCDate(s.getUTCDate() + week * 7)
     const monthStr = d.toLocaleDateString('zh-CN', { month: 'short', timeZone: 'UTC' })
-    // 去掉重复的"月"字
     const month = monthStr.replace('月月', '月')
     if (month !== lastMonth) {
       result.push({ label: month, x: week * (CELL + GAP) })
