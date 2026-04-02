@@ -1,16 +1,29 @@
 <template>
   <div class="heatmap">
-    <div class="heatmap-grid">
-      <div
-        v-for="(count, index) in grid"
-        :key="index"
-        class="heat-cell"
-        :class="getLevel(count)"
-        :title="getTitle(index, count)"
-      />
+    <!-- 左侧星期标签 -->
+    <div class="heatmap-left">
+      <div class="day-label"></div>
+      <div v-for="d in dayLabels" :key="d" class="day-label">{{ d }}</div>
     </div>
-    <div class="heatmap-months">
-      <span v-for="m in months" :key="m" class="month-label">{{ m }}</span>
+    <!-- 网格和月份 -->
+    <div class="heatmap-main">
+      <div class="heatmap-grid">
+        <div
+          v-for="(count, index) in grid"
+          :key="index"
+          class="heat-cell"
+          :class="getLevel(count)"
+          :title="getTitle(index, count)"
+        />
+      </div>
+      <div class="heatmap-months">
+        <span
+          v-for="(m, i) in months"
+          :key="i"
+          class="month-label"
+          :style="{ gridColumn: m.col + 1 }"
+        >{{ m.label }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -25,17 +38,19 @@ const props = defineProps({
   }
 })
 
-// 7 columns (days) x 12 rows (weeks), matching CSS grid row-major order
+const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+
+// 7 rows (days) x 12 columns (weeks), row-major to match CSS grid
 const grid = computed(() => {
   const result = []
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  // Calculate start: go back 12 weeks from today
+  // Start from 11 weeks ago, aligned to Sunday
   const start = new Date(today)
   start.setDate(today.getDate() - 11 * 7 - today.getDay())
 
-  // Generate: row (weeks) outer, col (days) inner -> matches CSS grid row-major
+  // row-major: week outer, day inner -> 12 cols x 7 rows
   for (let week = 0; week < 12; week++) {
     for (let day = 0; day < 7; day++) {
       const current = new Date(start)
@@ -47,13 +62,25 @@ const grid = computed(() => {
   return result
 })
 
-// Months at bottom
+// 月份标签：出现在顶部的月份
 const months = computed(() => {
-  const now = new Date()
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const start = new Date(today)
+  start.setDate(today.getDate() - 11 * 7 - today.getDay())
+
   const result = []
-  for (let i = 2; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    result.push(d.toLocaleDateString('zh-CN', { month: 'short' }))
+  let lastMonth = ''
+
+  for (let week = 0; week < 12; week++) {
+    const current = new Date(start)
+    current.setDate(start.getDate() + week * 7)
+    const month = current.toLocaleDateString('zh-CN', { month: 'short' })
+
+    if (month !== lastMonth) {
+      result.push({ label: month, col: week })
+      lastMonth = month
+    }
   }
   return result
 })
@@ -68,29 +95,50 @@ function getLevel(count) {
 function getTitle(index, count) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
-  // Calculate the start date: 11 weeks ago on Sunday
   const start = new Date(today)
   start.setDate(today.getDate() - 11 * 7 - today.getDay())
 
-  // grid is 7 columns (days) x 12 rows (weeks), row-major order
-  const col = index % 7
-  const row = Math.floor(index / 7)
+  // grid is 12 columns x 7 rows, row-major
+  const week = Math.floor(index / 7)
+  const day = index % 7
   const current = new Date(start)
-  current.setDate(start.getDate() + row * 7 + col)
+  current.setDate(start.getDate() + week * 7 + day)
   return `${current.toLocaleDateString('zh-CN')} ${count} 条`
 }
 </script>
 
 <style scoped>
 .heatmap {
+  display: flex;
+  gap: 4px;
   font-size: 10px;
+}
+
+.heatmap-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.day-label {
+  height: 14px;
+  line-height: 14px;
+  color: #999;
+  font-size: 10px;
+  width: 24px;
+  text-align: right;
+}
+
+.heatmap-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .heatmap-grid {
   display: grid;
-  grid-template-columns: repeat(7, 14px);
-  grid-template-rows: repeat(12, 14px);
+  grid-template-columns: repeat(12, 14px);
+  grid-template-rows: repeat(7, 14px);
   gap: 3px;
 }
 
@@ -105,14 +153,14 @@ function getTitle(index, count) {
 .level-3 { background: #2ecc71; }
 
 .heatmap-months {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(12, 14px);
+  gap: 3px;
 }
 
 .month-label {
   color: #999;
   font-size: 10px;
+  text-align: left;
 }
 </style>
