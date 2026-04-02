@@ -139,6 +139,7 @@ function getLevel(count) {
   display: grid;
   grid-template-columns: repeat(12, 14px);
   grid-template-rows: repeat(7, 14px);
+  grid-auto-flow: column;
   gap: 3px;
 }
 
