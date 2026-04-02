@@ -50,6 +50,7 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
+  justify-content: center;
 }
 
 .action-btn {
