@@ -66,8 +66,10 @@ function getLevel(count) {
 }
 
 function getTitle(index, count) {
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  // Calculate the start date: 11 weeks ago on Sunday
   const start = new Date(today)
   start.setDate(today.getDate() - 11 * 7 - today.getDay())
 
