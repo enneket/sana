@@ -48,14 +48,17 @@ const props = defineProps({
 const CELL = 14
 const GAP = 3
 
-// 今天的 UTC 日期
+// 今天的 UTC 日期（只用 UTC，避免时区问题）
 const today = computed(() => {
   const d = new Date()
-  d.setUTCHours(0, 0, 0, 0)
-  return d
+  // 直接用 UTC 今天，不用 setUTCHours
+  const year = d.getUTCFullYear()
+  const month = d.getUTCMonth()
+  const day = d.getUTCDate()
+  return new Date(Date.UTC(year, month, day))
 })
 
-// 起始日期（90天前，不对齐到周日）
+// 起始日期（90天前）
 const startDate = computed(() => {
   const d = new Date(today.value)
   d.setUTCDate(d.getUTCDate() - 90)
@@ -90,8 +93,7 @@ const cells = computed(() => {
   const t = today.value
   for (let week = 0; week < totalWeeks.value; week++) {
     for (let day = 0; day < 7; day++) {
-      const d = new Date(s)
-      d.setUTCDate(s.getUTCDate() + week * 7 + day)
+      const d = new Date(s.getTime() + (week * 7 + day) * 24 * 60 * 60 * 1000)
       // 只显示到今天
       if (d > t) continue
       const dateStr = d.toISOString().split('T')[0]
@@ -122,9 +124,12 @@ const monthPositions = computed(() => {
 
 function getLevel(count) {
   if (count === 0) return 'level-0'
-  if (count === 1) return 'level-1'
-  if (count === 2) return 'level-2'
-  return 'level-3'
+  if (count <= 5) return 'level-1'
+  if (count <= 10) return 'level-2'
+  if (count <= 15) return 'level-3'
+  if (count <= 20) return 'level-4'
+  if (count <= 25) return 'level-5'
+  return 'level-6'
 }
 </script>
 
@@ -186,7 +191,10 @@ function getLevel(count) {
 }
 
 .level-0 { background: #ebebeb; }
-.level-1 { background: #c3e8d1; }
-.level-2 { background: #7cd69e; }
-.level-3 { background: #2ecc71; }
+.level-1 { background: #a8d5b8; }
+.level-2 { background: #7cc494; }
+.level-3 { background: #5eb87a; }
+.level-4 { background: #3da863; }
+.level-5 { background: #2e8b57; }
+.level-6 { background: #1e6b3e; }
 </style>

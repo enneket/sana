@@ -37,7 +37,7 @@ func handleListMemos(w http.ResponseWriter, r *http.Request) {
 	var rows, err = db.Query(memoCtx, `
 		SELECT id, uid, user_id, content, created_at, updated_at
 		FROM memos
-		WHERE user_id = $1 AND ($2 = false OR updated_at < $3)
+		WHERE user_id = $1 AND ($2 OR updated_at < $3)
 		ORDER BY updated_at DESC
 		LIMIT $4
 	`, userID, cursor.IsZero(), cursor, limit)
