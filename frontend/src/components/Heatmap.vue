@@ -1,28 +1,32 @@
 <template>
   <div class="heatmap">
-    <!-- 左侧星期标签 -->
-    <div class="heatmap-left">
-      <div class="day-label"></div>
-      <div v-for="d in dayLabels" :key="d" class="day-label">{{ d }}</div>
+    <!-- 左侧：空 + 星期 -->
+    <div class="day-col">
+      <div class="header-corner"></div>
+      <div v-for="(label, i) in dayLabels" :key="i" class="day-label">{{ label }}</div>
     </div>
-    <!-- 网格和月份 -->
-    <div class="heatmap-main">
-      <div class="heatmap-grid">
-        <div
-          v-for="(count, index) in grid"
-          :key="index"
-          class="heat-cell"
-          :class="getLevel(count)"
-          :title="getTitle(index, count)"
-        />
-      </div>
-      <div class="heatmap-months">
+
+    <!-- 右侧：月份 + 网格 -->
+    <div class="grid-area">
+      <!-- 月份标签 -->
+      <div class="months-row">
         <span
-          v-for="(m, i) in months"
+          v-for="(m, i) in monthPositions"
           :key="i"
           class="month-label"
-          :style="{ gridColumn: m.col + 1 }"
+          :style="{ left: m.x + 'px' }"
         >{{ m.label }}</span>
+      </div>
+
+      <!-- 网格 -->
+      <div class="grid">
+        <div
+          v-for="(cell, idx) in cells"
+          :key="idx"
+          class="cell"
+          :class="getLevel(cell.count)"
+          :title="cell.dateStr + ' ' + cell.count + '条'"
+        />
       </div>
     </div>
   </div>
@@ -32,54 +36,48 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  heatmap: {
-    type: Object,
-    default: () => ({})
-  }
+  heatmap: { type: Object, default: () => ({}) }
 })
 
 const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+const CELL = 14
+const GAP = 3
 
-// 12 columns (weeks) x 7 rows (days)
-// CSS grid column-major fills each column with one week's data
-const grid = computed(() => {
+// 计算起始日期（12周前的周日）
+const startDate = computed(() => {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() - 11 * 7 - d.getDay())
+  return d
+})
+
+// 12列(周) x 7行(天)，row-major CSS grid
+const cells = computed(() => {
   const result = []
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  // Start from 11 weeks ago, aligned to Sunday
-  const start = new Date(today)
-  start.setDate(today.getDate() - 11 * 7 - today.getDay())
-
-  // week outer, day inner -> CSS column-major makes each column one week
+  const s = startDate.value
   for (let week = 0; week < 12; week++) {
     for (let day = 0; day < 7; day++) {
-      const current = new Date(start)
-      current.setDate(start.getDate() + week * 7 + day)
-      const dateStr = current.toISOString().split('T')[0]
-      result.push(props.heatmap[dateStr] || 0)
+      const d = new Date(s)
+      d.setDate(s.getDate() + week * 7 + day)
+      const dateStr = d.toISOString().split('T')[0]
+      result.push({ count: props.heatmap[dateStr] || 0, dateStr })
     }
   }
   return result
 })
 
-// 月份标签
-const months = computed(() => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const start = new Date(today)
-  start.setDate(today.getDate() - 11 * 7 - today.getDay())
-
+// 月份标签位置
+const monthPositions = computed(() => {
+  const s = startDate.value
   const result = []
   let lastMonth = ''
 
   for (let week = 0; week < 12; week++) {
-    const current = new Date(start)
-    current.setDate(start.getDate() + week * 7)
-    const month = current.toLocaleDateString('zh-CN', { month: 'short' })
-
+    const d = new Date(s)
+    d.setDate(s.getDate() + week * 7)
+    const month = d.toLocaleDateString('zh-CN', { month: 'short' })
     if (month !== lastMonth) {
-      result.push({ label: month, col: week })
+      result.push({ label: month, x: week * (CELL + GAP) })
       lastMonth = month
     }
   }
@@ -92,22 +90,6 @@ function getLevel(count) {
   if (count === 2) return 'level-2'
   return 'level-3'
 }
-
-// grid is 12 columns (weeks) x 7 rows (days), column-major filled
-// col = week index, row = day index
-function getTitle(index, count) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const start = new Date(today)
-  start.setDate(today.getDate() - 11 * 7 - today.getDay())
-
-  // col = week, row = day (CSS column-major: each column is one week)
-  const col = Math.floor(index / 7)
-  const row = index % 7
-  const current = new Date(start)
-  current.setDate(start.getDate() + col * 7 + row)
-  return `${current.toLocaleDateString('zh-CN')} ${count} 条`
-}
 </script>
 
 <style scoped>
@@ -115,37 +97,54 @@ function getTitle(index, count) {
   display: flex;
   gap: 4px;
   font-size: 10px;
+  position: relative;
 }
 
-.heatmap-left {
+.day-col {
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+.header-corner {
+  height: 14px;
 }
 
 .day-label {
   height: 14px;
   line-height: 14px;
   color: #999;
-  font-size: 10px;
   width: 24px;
   text-align: right;
 }
 
-.heatmap-main {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.grid-area {
+  position: relative;
 }
 
-.heatmap-grid {
+.months-row {
+  position: relative;
+  height: 14px;
+  margin-bottom: 4px;
+}
+
+.month-label {
+  position: absolute;
+  color: #999;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.grid {
   display: grid;
   grid-template-columns: repeat(12, 14px);
   grid-template-rows: repeat(7, 14px);
   gap: 3px;
 }
 
-.heat-cell {
+.cell {
+  width: 14px;
+  height: 14px;
   border-radius: 2px;
   background: #ebebeb;
 }
@@ -154,16 +153,4 @@ function getTitle(index, count) {
 .level-1 { background: #c3e8d1; }
 .level-2 { background: #7cd69e; }
 .level-3 { background: #2ecc71; }
-
-.heatmap-months {
-  display: grid;
-  grid-template-columns: repeat(12, 14px);
-  gap: 3px;
-}
-
-.month-label {
-  color: #999;
-  font-size: 10px;
-  text-align: left;
-}
 </style>
