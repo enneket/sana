@@ -56,9 +56,12 @@ const today = computed(() => {
   return d
 })
 
-// 计算起始日期（今天之前的最近周日）
+// 计算起始日期（3个月前的周日）
 const startDate = computed(() => {
   const d = new Date(today.value)
+  // 3个月前
+  d.setUTCMonth(d.getUTCMonth() - 3)
+  // 回滚到周日
   d.setUTCDate(d.getUTCDate() - d.getUTCDay())
   return d
 })
