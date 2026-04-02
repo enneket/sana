@@ -46,8 +46,8 @@ const GAP = 3
 // 计算起始日期（12周前的周日）
 const startDate = computed(() => {
   const d = new Date()
-  d.setHours(0, 0, 0, 0)
-  d.setDate(d.getDate() - 11 * 7 - d.getDay())
+  d.setUTCHours(0, 0, 0, 0)
+  d.setUTCDate(d.getUTCDate() - 11 * 7 - d.getUTCDay())
   return d
 })
 
@@ -58,7 +58,7 @@ const cells = computed(() => {
   for (let week = 0; week < 12; week++) {
     for (let day = 0; day < 7; day++) {
       const d = new Date(s)
-      d.setDate(s.getDate() + week * 7 + day)
+      d.setUTCDate(s.getUTCDate() + week * 7 + day)
       const dateStr = d.toISOString().split('T')[0]
       result.push({ count: props.heatmap[dateStr] || 0, dateStr })
     }
@@ -74,8 +74,8 @@ const monthPositions = computed(() => {
 
   for (let week = 0; week < 12; week++) {
     const d = new Date(s)
-    d.setDate(s.getDate() + week * 7)
-    const month = d.toLocaleDateString('zh-CN', { month: 'short' })
+    d.setUTCDate(s.getUTCDate() + week * 7)
+    const month = d.toLocaleDateString('zh-CN', { month: 'short', timeZone: 'UTC' })
     if (month !== lastMonth) {
       result.push({ label: month, x: week * (CELL + GAP) })
       lastMonth = month
