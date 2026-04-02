@@ -9,7 +9,7 @@
     <!-- 右侧：月份 + 网格 -->
     <div class="grid-area">
       <!-- 月份标签 -->
-      <div class="months-row">
+      <div class="months-row" :style="{ width: totalWeeks * (CELL + GAP) - GAP + 'px' }">
         <span
           v-for="(m, i) in monthPositions"
           :key="i"
@@ -19,7 +19,13 @@
       </div>
 
       <!-- 网格 -->
-      <div class="grid">
+      <div
+        class="grid"
+        :style="{
+          gridTemplateColumns: `repeat(${totalWeeks}, 14px)`,
+          gridAutoFlow: 'column'
+        }"
+      >
         <div
           v-for="(cell, idx) in cells"
           :key="idx"
@@ -43,19 +49,31 @@ const dayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '
 const CELL = 14
 const GAP = 3
 
-// 计算起始日期（12周前的周日）
-const startDate = computed(() => {
+// 今天的 UTC 日期
+const today = computed(() => {
   const d = new Date()
   d.setUTCHours(0, 0, 0, 0)
-  d.setUTCDate(d.getUTCDate() - 11 * 7 - d.getUTCDay())
   return d
 })
 
-// 12列(周) x 7行(天)，row-major CSS grid
+// 计算起始日期（今天之前的最近周日）
+const startDate = computed(() => {
+  const d = new Date(today.value)
+  d.setUTCDate(d.getUTCDate() - d.getUTCDay())
+  return d
+})
+
+// 总周数（从起始周到今天）
+const totalWeeks = computed(() => {
+  const days = Math.ceil((today.value.getTime() - startDate.value.getTime()) / (7 * 24 * 60 * 60 * 1000))
+  return days
+})
+
+// 生成单元格数据
 const cells = computed(() => {
   const result = []
   const s = startDate.value
-  for (let week = 0; week < 12; week++) {
+  for (let week = 0; week < totalWeeks.value; week++) {
     for (let day = 0; day < 7; day++) {
       const d = new Date(s)
       d.setUTCDate(s.getUTCDate() + week * 7 + day)
@@ -72,7 +90,7 @@ const monthPositions = computed(() => {
   const result = []
   let lastMonth = ''
 
-  for (let week = 0; week < 12; week++) {
+  for (let week = 0; week < totalWeeks.value; week++) {
     const d = new Date(s)
     d.setUTCDate(s.getUTCDate() + week * 7)
     const month = d.toLocaleDateString('zh-CN', { month: 'short', timeZone: 'UTC' })
@@ -137,9 +155,7 @@ function getLevel(count) {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(12, 14px);
   grid-template-rows: repeat(7, 14px);
-  grid-auto-flow: column;
   gap: 3px;
 }
 
