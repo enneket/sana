@@ -2,9 +2,9 @@
   <div class="timeline-view">
     <MemoComposer @created="onMemoCreated" />
 
-    <div v-if="loading" class="loading">加载中...</div>
+    <div v-if="loading && memos.length === 0" class="loading">加载中...</div>
 
-    <div v-else-if="error" class="error">{{ error }}</div>
+    <div v-else-if="error && memos.length === 0" class="error">{{ error }}</div>
 
     <div v-else class="memo-list">
       <div v-if="groupedMemos.length === 0" class="empty">
@@ -18,9 +18,10 @@
         @edit="editMemo"
         @delete="deleteMemo"
       />
-      <button v-if="hasMore" class="load-more" @click="loadMore">
-        加载更多
-      </button>
+      <div ref="sentinel" class="sentinel">
+        <div v-if="loading && memos.length > 0" class="loading-more">加载中...</div>
+        <div v-else-if="!hasMore && memos.length > 0" class="no-more">没有更多了</div>
+      </div>
     </div>
 
     <SearchModal
@@ -40,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import MemoComposer from '../components/MemoComposer.vue'
 import MemoCard from '../components/MemoCard.vue'
 import MemoEditor from '../components/MemoEditor.vue'
@@ -56,6 +57,10 @@ const hasMore = ref(false)
 const showSearchModal = ref(false)
 const editingMemo = ref(null)
 const fileInput = ref(null)
+const sentinel = ref(null)
+const emit = defineEmits(['created'])
+
+let observer = null
 
 const groupedMemos = computed(() => {
   const now = new Date()
@@ -106,11 +111,22 @@ async function loadMemos(append = false) {
 }
 
 async function loadMore() {
-  if (cursor.value) await loadMemos(true)
+  if (cursor.value && !loading.value) await loadMemos(true)
+}
+
+function setupObserver() {
+  if (!sentinel.value) return
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && hasMore.value && !loading.value) {
+      loadMore()
+    }
+  }, { threshold: 0.1 })
+  observer.observe(sentinel.value)
 }
 
 function onMemoCreated(memo) {
   memos.value = [memo, ...memos.value]
+  emit('created', memo)
 }
 
 async function editMemo(memo) {
@@ -166,7 +182,14 @@ async function handleImport(e) {
   e.target.value = ''
 }
 
-onMounted(() => loadMemos())
+onMounted(async () => {
+  await loadMemos()
+  setupObserver()
+})
+
+onUnmounted(() => {
+  if (observer) observer.disconnect()
+})
 
 function triggerImport() {
   fileInput.value?.click()
@@ -216,5 +239,17 @@ defineExpose({
   background: #f7f7f7;
   border-color: #ddd;
   color: #666;
+}
+
+.sentinel {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-more, .no-more {
+  font-size: 12px;
+  color: #bbb;
 }
 </style>

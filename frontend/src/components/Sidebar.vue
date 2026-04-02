@@ -20,12 +20,18 @@ defineEmits(['openSearch', 'export', 'import'])
 
 const stats = ref({})
 
-onMounted(async () => {
+async function refreshStats() {
   try {
     stats.value = await api.getStats()
   } catch {
     // silent fail
   }
+}
+
+defineExpose({ refreshStats })
+
+onMounted(async () => {
+  await refreshStats()
 })
 </script>
 

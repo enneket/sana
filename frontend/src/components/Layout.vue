@@ -1,8 +1,8 @@
 <template>
   <div class="app-layout">
-    <Sidebar @openSearch="showSearch" @export="handleExport" @import="triggerImport" />
+    <Sidebar ref="sidebar" @openSearch="showSearch" @export="handleExport" @import="triggerImport" />
     <main class="main-content">
-      <TimelineView ref="timeline" />
+      <TimelineView ref="timeline" @created="onMemoCreated" />
     </main>
   </div>
 </template>
@@ -13,6 +13,7 @@ import Sidebar from './Sidebar.vue'
 import TimelineView from '../views/TimelineView.vue'
 
 const timeline = ref(null)
+const sidebar = ref(null)
 const showSearchModal = ref(false)
 
 function showSearch() {
@@ -25,6 +26,10 @@ function handleExport() {
 
 function triggerImport() {
   timeline.value?.triggerImport()
+}
+
+function onMemoCreated() {
+  sidebar.value?.refreshStats()
 }
 </script>
 

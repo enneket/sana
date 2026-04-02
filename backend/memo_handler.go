@@ -37,7 +37,7 @@ func handleListMemos(w http.ResponseWriter, r *http.Request) {
 	var rows, err = db.Query(memoCtx, `
 		SELECT id, uid, user_id, content, created_at, updated_at
 		FROM memos
-		WHERE user_id = $1 AND ($2 = false OR updated_at < $3)
+		WHERE user_id = $1 AND ($2 OR updated_at < $3)
 		ORDER BY updated_at DESC
 		LIMIT $4
 	`, userID, cursor.IsZero(), cursor, limit)
@@ -207,7 +207,7 @@ func handleGetStats(w http.ResponseWriter, r *http.Request) {
 		"SELECT COUNT(DISTINCT DATE(created_at)) FROM memos WHERE user_id = $1", userID).Scan(&activeDays)
 
 	rows, _ := db.Query(r.Context(), `
-		SELECT DATE(created_at) as day, COUNT(*) as count
+		SELECT DATE(created_at)::text as day, COUNT(*) as count
 		FROM memos
 		WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '90 days'
 		GROUP BY DATE(created_at)

@@ -1,16 +1,39 @@
 <template>
   <div class="heatmap">
-    <div class="heatmap-grid">
-      <div
-        v-for="(count, index) in grid"
-        :key="index"
-        class="heat-cell"
-        :class="getLevel(count)"
-        :title="getTitle(index, count)"
-      />
+    <!-- 左侧：空 + 星期 -->
+    <div class="day-col">
+      <div class="header-corner"></div>
+      <div v-for="(label, i) in dayLabels" :key="i" class="day-label">{{ label }}</div>
     </div>
-    <div class="heatmap-months">
-      <span v-for="m in months" :key="m" class="month-label">{{ m }}</span>
+
+    <!-- 右侧：月份 + 网格 -->
+    <div class="grid-area">
+      <!-- 月份标签 -->
+      <div class="months-row" :style="{ width: totalWeeks * (CELL + GAP) - GAP + 'px' }">
+        <span
+          v-for="(m, i) in monthPositions"
+          :key="i"
+          class="month-label"
+          :style="{ left: m.x + 'px' }"
+        >{{ m.label }}</span>
+      </div>
+
+      <!-- 网格 -->
+      <div
+        class="grid"
+        :style="{
+          gridTemplateColumns: `repeat(${totalWeeks}, 14px)`,
+          gridAutoFlow: 'column'
+        }"
+      >
+        <div
+          v-for="(cell, idx) in cells"
+          :key="idx"
+          class="cell"
+          :class="getLevel(cell.count)"
+          :title="cell.dateStr + ' ' + cell.count + '条'"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -19,97 +42,159 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  heatmap: {
-    type: Object,
-    default: () => ({})
-  }
+  heatmap: { type: Object, default: () => ({}) }
 })
 
-// 7 columns (days) x 12 rows (weeks)
-const grid = computed(() => {
+const CELL = 14
+const GAP = 3
+
+// 今天的 UTC 日期（只用 UTC，避免时区问题）
+const today = computed(() => {
+  const d = new Date()
+  // 直接用 UTC 今天，不用 setUTCHours
+  const year = d.getUTCFullYear()
+  const month = d.getUTCMonth()
+  const day = d.getUTCDate()
+  return new Date(Date.UTC(year, month, day))
+})
+
+// 起始日期（90天前）
+const startDate = computed(() => {
+  const d = new Date(today.value)
+  d.setUTCDate(d.getUTCDate() - 90)
+  return d
+})
+
+// 起始日是周几 -> 决定左侧标签从哪天开始
+const startDayOfWeek = computed(() => startDate.value.getUTCDay())
+
+// 动态星期标签，从起始日那天开始
+const dayLabels = computed(() => {
+  const labels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  const start = startDayOfWeek.value
   const result = []
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  for (let i = 0; i < 7; i++) {
+    result.push(labels[(start + i) % 7])
+  }
+  return result
+})
 
-  // Calculate start: go back 12 weeks from today
-  const start = new Date(today)
-  start.setDate(today.getDate() - 11 * 7 - today.getDay())
+// 总周数
+const totalWeeks = computed(() => {
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000
+  const days = Math.ceil((today.value.getTime() - startDate.value.getTime()) / msPerWeek)
+  return days
+})
 
-  // Generate 7 columns x 12 rows
-  for (let row = 0; row < 7; row++) {
-    for (let col = 0; col < 12; col++) {
-      const current = new Date(start)
-      current.setDate(start.getDate() + col * 7 + row)
-      const dateStr = current.toISOString().split('T')[0]
-      result.push(props.heatmap[dateStr] || 0)
+// 生成单元格数据
+const cells = computed(() => {
+  const result = []
+  const s = startDate.value
+  const t = today.value
+  for (let week = 0; week < totalWeeks.value; week++) {
+    for (let day = 0; day < 7; day++) {
+      const d = new Date(s.getTime() + (week * 7 + day) * 24 * 60 * 60 * 1000)
+      // 只显示到今天
+      if (d > t) continue
+      const dateStr = d.toISOString().split('T')[0]
+      result.push({ count: props.heatmap[dateStr] || 0, dateStr })
     }
   }
   return result
 })
 
-// Months at bottom
-const months = computed(() => {
-  const now = new Date()
+// 月份标签位置
+const monthPositions = computed(() => {
+  const s = startDate.value
   const result = []
-  for (let i = 2; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    result.push(d.toLocaleDateString('zh-CN', { month: 'short' }))
+  let lastMonth = ''
+
+  for (let week = 0; week < totalWeeks.value; week++) {
+    const d = new Date(s)
+    d.setUTCDate(s.getUTCDate() + week * 7)
+    const monthStr = d.toLocaleDateString('zh-CN', { month: 'short', timeZone: 'UTC' })
+    const month = monthStr.replace('月月', '月')
+    if (month !== lastMonth) {
+      result.push({ label: month, x: week * (CELL + GAP) })
+      lastMonth = month
+    }
   }
   return result
 })
 
 function getLevel(count) {
   if (count === 0) return 'level-0'
-  if (count === 1) return 'level-1'
-  if (count === 2) return 'level-2'
-  return 'level-3'
-}
-
-function getTitle(index, count) {
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const start = new Date(today)
-  start.setDate(today.getDate() - 11 * 7 - today.getDay())
-
-  const row = index % 7
-  const col = Math.floor(index / 7)
-  const current = new Date(start)
-  current.setDate(start.getDate() + col * 7 + row)
-  return `${current.toLocaleDateString('zh-CN')} ${count} 条`
+  if (count <= 5) return 'level-1'
+  if (count <= 10) return 'level-2'
+  if (count <= 15) return 'level-3'
+  if (count <= 20) return 'level-4'
+  if (count <= 25) return 'level-5'
+  return 'level-6'
 }
 </script>
 
 <style scoped>
 .heatmap {
+  display: flex;
+  gap: 4px;
   font-size: 10px;
+  position: relative;
 }
 
-.heatmap-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 14px);
-  grid-template-rows: repeat(12, 14px);
+.day-col {
+  display: flex;
+  flex-direction: column;
   gap: 3px;
 }
 
-.heat-cell {
+.header-corner {
+  height: 14px;
+}
+
+.day-label {
+  height: 14px;
+  line-height: 14px;
+  color: #999;
+  width: 24px;
+  text-align: right;
+}
+
+.grid-area {
+  position: relative;
+}
+
+.months-row {
+  position: relative;
+  height: 14px;
+  margin-bottom: 4px;
+  overflow: visible;
+}
+
+.month-label {
+  position: absolute;
+  color: #999;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-rows: repeat(7, 14px);
+  gap: 3px;
+}
+
+.cell {
+  width: 14px;
+  height: 14px;
   border-radius: 2px;
   background: #ebebeb;
 }
 
 .level-0 { background: #ebebeb; }
-.level-1 { background: #c3e8d1; }
-.level-2 { background: #7cd69e; }
-.level-3 { background: #2ecc71; }
-
-.heatmap-months {
-  display: flex;
-  gap: 4px;
-  margin-top: 6px;
-  justify-content: space-between;
-}
-
-.month-label {
-  color: #999;
-  font-size: 10px;
-}
+.level-1 { background: #a8d5b8; }
+.level-2 { background: #7cc494; }
+.level-3 { background: #5eb87a; }
+.level-4 { background: #3da863; }
+.level-5 { background: #2e8b57; }
+.level-6 { background: #1e6b3e; }
 </style>
