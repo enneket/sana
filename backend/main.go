@@ -68,18 +68,18 @@ func main() {
 	mux.HandleFunc("POST /api/auth/logout", withCORS(handleLogout))
 	mux.HandleFunc("GET /api/auth/me", withCORS(withAuth(handleMe)))
 
-	// Memos (Timeline)
-	mux.HandleFunc("GET /api/memos", withCORS(withAuth(handleListMemos)))
-	mux.HandleFunc("POST /api/memos", withCORS(withAuth(handleCreateMemo)))
-	mux.HandleFunc("GET /api/memos/", withCORS(withAuth(handleGetMemo)))
-	mux.HandleFunc("PUT /api/memos/", withCORS(withAuth(handleUpdateMemo)))
-	mux.HandleFunc("DELETE /api/memos/", withCORS(withAuth(handleDeleteMemo)))
-	mux.HandleFunc("GET /api/memos/search", withCORS(withAuth(handleSearchMemos)))
-	mux.HandleFunc("GET /api/memos/stats", withCORS(withAuth(handleGetStats)))
+	// Sanas (Timeline)
+	mux.HandleFunc("GET /api/sanas", withCORS(withAuth(handleListMemos)))
+	mux.HandleFunc("POST /api/sanas", withCORS(withAuth(handleCreateMemo)))
+	mux.HandleFunc("GET /api/sanas/", withCORS(withAuth(handleGetMemo)))
+	mux.HandleFunc("PUT /api/sanas/", withCORS(withAuth(handleUpdateMemo)))
+	mux.HandleFunc("DELETE /api/sanas/", withCORS(withAuth(handleDeleteMemo)))
+	mux.HandleFunc("GET /api/sanas/search", withCORS(withAuth(handleSearchMemos)))
+	mux.HandleFunc("GET /api/sanas/stats", withCORS(withAuth(handleGetStats)))
 
 	// Import/Export (Memos format)
-	mux.HandleFunc("GET /api/export/memos", withCORS(withAuth(handleExportMemos)))
-	mux.HandleFunc("POST /api/import/memos", withCORS(withAuth(handleImportMemos)))
+	mux.HandleFunc("GET /api/export/sanas", withCORS(withAuth(handleExportMemos)))
+	mux.HandleFunc("POST /api/import/sanas", withCORS(withAuth(handleImportMemos)))
 
 	// Serve Vue frontend (SPA)
 	spa := spaHandler{root: "frontend/dist"}

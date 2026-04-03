@@ -1,6 +1,6 @@
 <template>
   <div class="timeline-view">
-    <MemoComposer @created="onMemoCreated" />
+    <SanaComposer @created="onMemoCreated" />
 
     <div v-if="loading && memos.length === 0" class="loading">加载中...</div>
 
@@ -31,7 +31,7 @@
       @select="onSearchSelect"
     />
 
-    <MemoEditor
+    <SanaEditor
       v-if="editingMemo"
       :memo="editingMemo"
       @close="editingMemo = null"
@@ -42,9 +42,9 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import MemoComposer from '../components/MemoComposer.vue'
-import MemoCard from '../components/MemoCard.vue'
-import MemoEditor from '../components/MemoEditor.vue'
+import SanaComposer from '../components/SanaComposer.vue'
+import SanaCard from '../components/SanaCard.vue'
+import SanaEditor from '../components/SanaEditor.vue'
 import TimeGroup from '../components/TimeGroup.vue'
 import SearchModal from '../components/SearchModal.vue'
 import api from '../api/index.js'

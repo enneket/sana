@@ -14,7 +14,7 @@ type MemosExport struct {
 	App        string           `json:"app"`
 	Version   string           `json:"version"`
 	ExportedAt string          `json:"exported_at"`
-	Memos     []MemoExportItem `json:"memos"`
+	Memos     []MemoExportItem `json:"sanas"`
 }
 
 // MemoExportItem 单条导出项
@@ -33,7 +33,7 @@ func handleExportMemos(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	rows, err := db.Query(ctx, `
 		SELECT uid, content, created_at, updated_at
-		FROM memos WHERE user_id = $1 ORDER BY created_at DESC
+		FROM sanas WHERE user_id = $1 ORDER BY created_at DESC
 	`, userID)
 	if err != nil {
 		http.Error(w, "database error", http.StatusInternalServerError)
@@ -43,17 +43,17 @@ func handleExportMemos(w http.ResponseWriter, r *http.Request) {
 
 	var items []MemoExportItem
 	for rows.Next() {
-		var m Memo
-		if err := rows.Scan(&m.UID, &m.Content, &m.CreatedAt, &m.UpdatedAt); err != nil {
+		var s Sana
+		if err := rows.Scan(&s.UID, &s.Content, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			continue
 		}
 		items = append(items, MemoExportItem{
-			UID:        m.UID,
-			Content:    m.Content,
+			UID:        s.UID,
+			Content:    s.Content,
 			Visibility: "private",
 			Pinned:     false,
-			CreatedTs:  m.CreatedAt.Unix(),
-			UpdatedTs:  m.UpdatedAt.Unix(),
+			CreatedTs:  s.CreatedAt.Unix(),
+			UpdatedTs:  s.UpdatedAt.Unix(),
 		})
 	}
 
@@ -70,8 +70,8 @@ func handleExportMemos(w http.ResponseWriter, r *http.Request) {
 	zw := zip.NewWriter(w)
 	defer zw.Close()
 
-	// Write memos.json
-	fw, err := zw.Create("memos.json")
+	// Write sanas.json
+	fw, err := zw.Create("sanas.json")
 	if err != nil {
 		return
 	}

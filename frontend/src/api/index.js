@@ -38,37 +38,37 @@ const api = {
 
   me: () => fetchWithAuth(`${API_BASE}/auth/me`).then(handleResponse),
 
-  // Memos (Timeline)
+  // Sanas (Timeline)
   listMemos: (cursor) => {
-    let url = `${API_BASE}/memos?limit=20`
+    let url = `${API_BASE}/sanas?limit=20`
     if (cursor) url += `&cursor=${cursor}`
     return fetchWithAuth(url).then(handleResponse)
   },
 
-  createMemo: (content) => fetchWithAuth(`${API_BASE}/memos`, {
+  createMemo: (content) => fetchWithAuth(`${API_BASE}/sanas`, {
     method: 'POST',
     body: JSON.stringify({ content }),
     headers: { 'Content-Type': 'application/json' },
   }).then(handleResponse),
 
-  getMemo: (id) => fetchWithAuth(`${API_BASE}/memos/${id}`).then(handleResponse),
+  getMemo: (id) => fetchWithAuth(`${API_BASE}/sanas/${id}`).then(handleResponse),
 
-  updateMemo: (id, content) => fetchWithAuth(`${API_BASE}/memos/${id}`, {
+  updateMemo: (id, content) => fetchWithAuth(`${API_BASE}/sanas/${id}`, {
     method: 'PUT',
     body: JSON.stringify({ content }),
     headers: { 'Content-Type': 'application/json' },
   }).then(handleResponse),
 
-  deleteMemo: (id) => fetchWithAuth(`${API_BASE}/memos/${id}`, { method: 'DELETE' }).then(handleResponse),
+  deleteMemo: (id) => fetchWithAuth(`${API_BASE}/sanas/${id}`, { method: 'DELETE' }).then(handleResponse),
 
-  searchMemos: (q) => fetchWithAuth(`${API_BASE}/memos/search?q=${encodeURIComponent(q)}`)
+  searchMemos: (q) => fetchWithAuth(`${API_BASE}/sanas/search?q=${encodeURIComponent(q)}`)
     .then(handleResponse),
 
-  getStats: () => fetchWithAuth(`${API_BASE}/memos/stats`).then(handleResponse),
+  getStats: () => fetchWithAuth(`${API_BASE}/sanas/stats`).then(handleResponse),
 
-  exportMemos: () => fetchWithAuth(`${API_BASE}/export/memos`).then(r => r.blob()),
+  exportMemos: () => fetchWithAuth(`${API_BASE}/export/sanas`).then(r => r.blob()),
 
-  importMemos: (formData) => fetchWithAuth(`${API_BASE}/import/memos`, {
+  importMemos: (formData) => fetchWithAuth(`${API_BASE}/import/sanas`, {
     method: 'POST',
     body: formData,
   }).then(handleResponse),
