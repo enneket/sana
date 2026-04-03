@@ -8,6 +8,20 @@
     <div class="heatmap-section">
       <Heatmap :heatmap="stats.heatmap || {}" />
     </div>
+    <div class="stats-section">
+      <div class="stat-item">
+        <span class="stat-label">累计笔记</span>
+        <span class="stat-value">{{ stats.memo_count || 0 }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">累计字数</span>
+        <span class="stat-value">{{ stats.total_chars || 0 }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">累计天数</span>
+        <span class="stat-value">{{ stats.active_days || 0 }}</span>
+      </div>
+    </div>
   </aside>
 </template>
 
@@ -50,6 +64,7 @@ onMounted(async () => {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
+  justify-content: center;
 }
 
 .action-btn {
@@ -71,5 +86,33 @@ onMounted(async () => {
   border-radius: 8px;
   padding: 12px;
   border: 1px solid #eee;
+}
+
+.stats-section {
+  margin-top: 12px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #eee;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 12px;
+}
+
+.stat-item:not(:last-child) {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-label {
+  color: #999;
+}
+
+.stat-value {
+  color: #333;
+  font-weight: 500;
 }
 </style>
