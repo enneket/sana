@@ -44,7 +44,7 @@ func createSchema() error {
 		created_at TIMESTAMPTZ DEFAULT NOW()
 	);
 
-	CREATE TABLE IF NOT EXISTS memos (
+	CREATE TABLE IF NOT EXISTS sanas (
 		id SERIAL PRIMARY KEY,
 		uid TEXT UNIQUE NOT NULL,
 		user_id TEXT NOT NULL REFERENCES users(id),
@@ -53,9 +53,9 @@ func createSchema() error {
 		updated_at TIMESTAMPTZ DEFAULT NOW()
 	);
 
-	CREATE INDEX IF NOT EXISTS idx_memos_user_id ON memos(user_id);
-	CREATE INDEX IF NOT EXISTS idx_memos_updated_at ON memos(updated_at DESC);
-	CREATE INDEX IF NOT EXISTS idx_memos_content_gin ON memos USING gin(to_tsvector('simple', content));
+	CREATE INDEX IF NOT EXISTS idx_sanas_user_id ON sanas(user_id);
+	CREATE INDEX IF NOT EXISTS idx_sanas_updated_at ON sanas(updated_at DESC);
+	CREATE INDEX IF NOT EXISTS idx_sanas_content_gin ON sanas USING gin(to_tsvector('simple', content));
 	`
 	_, err := db.Exec(context.Background(), schema)
 	return err
@@ -66,7 +66,7 @@ func closeDB() {
 }
 
 // Memo 模型
-type Memo struct {
+type Sana struct {
 	ID        int       `json:"id"`
 	UID       string    `json:"uid"`
 	UserID    string    `json:"user_id"`
@@ -75,20 +75,20 @@ type Memo struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// MemoResponse 对外API响应格式
-type MemoResponse struct {
+// SanaResponse 对外API响应格式
+type SanaResponse struct {
 	ID        string `json:"id"`
 	Content   string `json:"content"`
 	CreatedTs int64  `json:"created_ts"`
 	UpdatedTs int64  `json:"updated_ts"`
 }
 
-// ToResponse converts Memo to MemoResponse
-func (m *Memo) ToResponse() MemoResponse {
-	return MemoResponse{
-		ID:        m.UID,
-		Content:   m.Content,
-		CreatedTs: m.CreatedAt.Unix(),
-		UpdatedTs: m.UpdatedAt.Unix(),
+// ToResponse converts Sana to SanaResponse
+func (s *Sana) ToResponse() SanaResponse {
+	return SanaResponse{
+		ID:        s.UID,
+		Content:   s.Content,
+		CreatedTs: s.CreatedAt.Unix(),
+		UpdatedTs: s.UpdatedAt.Unix(),
 	}
 }

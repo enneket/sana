@@ -16,14 +16,14 @@ import (
 var importCtx = context.Background()
 
 type ImportResult struct {
-	MemosImported int      `json:"memos_imported"`
+	MemosImported int      `json:"sanas_imported"`
 	Errors        []string `json:"errors,omitempty"`
 }
 
 type MemosImportFormat struct {
 	App    string           `json:"app"`
 	Version string          `json:"version"`
-	Memos  []MemoExportItem `json:"memos"`
+	Memos  []MemoExportItem `json:"sanas"`
 }
 
 func handleImportMemos(w http.ResponseWriter, r *http.Request) {
@@ -48,18 +48,18 @@ func handleImportMemos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var memosJSON *MemosImportFormat
+	var sanasJSON *MemosImportFormat
 	contentMap := make(map[string]string)
 
 	for _, f := range zr.File {
-		if f.Name == "memos.json" {
+		if f.Name == "sanas.json" {
 			rc, err := f.Open()
 			if err != nil {
 				continue
 			}
 			data, _ := io.ReadAll(rc)
 			rc.Close()
-			json.Unmarshal(data, &memosJSON)
+			json.Unmarshal(data, &sanasJSON)
 		} else if strings.HasSuffix(f.Name, ".md") {
 			rc, err := f.Open()
 			if err != nil {
@@ -72,20 +72,20 @@ func handleImportMemos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if memosJSON == nil {
-		http.Error(w, "invalid memos format: memos.json not found", http.StatusBadRequest)
+	if sanasJSON == nil {
+		http.Error(w, "invalid sanas format: sanas.json not found", http.StatusBadRequest)
 		return
 	}
 
-	if memosJSON.App != "sana" && memosJSON.App != "memos" {
-		http.Error(w, "unsupported format: app must be 'sana' or 'memos'", http.StatusBadRequest)
+	if sanasJSON.App != "sana" && sanasJSON.App != "sanas" {
+		http.Error(w, "unsupported format: app must be 'sana' or 'sanas'", http.StatusBadRequest)
 		return
 	}
 
 	result := ImportResult{MemosImported: 0}
 	now := time.Now()
 
-	for _, m := range memosJSON.Memos {
+	for _, m := range sanasJSON.Memos {
 		content := m.Content
 		if content == "" {
 			content, _ = contentMap[m.UID]
@@ -110,7 +110,7 @@ func handleImportMemos(w http.ResponseWriter, r *http.Request) {
 		}
 
 		_, err := db.Exec(importCtx, `
-			INSERT INTO memos (uid, user_id, content, created_at, updated_at)
+			INSERT INTO sanas (uid, user_id, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5)
 			ON CONFLICT (uid) DO UPDATE SET content = EXCLUDED.content, updated_at = EXCLUDED.updated_at
 		`, uid, userID, content, createdTs, updatedTs)

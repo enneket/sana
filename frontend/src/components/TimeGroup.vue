@@ -1,7 +1,7 @@
 <template>
   <div class="time-group">
     <div class="group-label">{{ label }}</div>
-    <MemoCard
+    <SanaCard
       v-for="memo in memos"
       :key="memo.id"
       :memo="memo"
@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import MemoCard from './MemoCard.vue'
+import SanaCard from './SanaCard.vue'
 defineProps(['label', 'memos'])
 defineEmits(['edit', 'delete'])
 </script>

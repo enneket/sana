@@ -11,9 +11,9 @@ import (
 	"github.com/google/uuid"
 )
 
-var memoCtx = context.Background()
+var sanaCtx = context.Background()
 
-// handleListMemos handles GET /api/memos
+// handleListMemos handles GET /api/sanas
 func handleListMemos(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 
@@ -34,9 +34,9 @@ func handleListMemos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var rows, err = db.Query(memoCtx, `
+	var rows, err = db.Query(sanaCtx, `
 		SELECT id, uid, user_id, content, created_at, updated_at
-		FROM memos
+		FROM sanas
 		WHERE user_id = $1 AND ($2 OR updated_at < $3)
 		ORDER BY updated_at DESC
 		LIMIT $4
@@ -47,30 +47,30 @@ func handleListMemos(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var memos []MemoResponse
+	var sanas []SanaResponse
 	var lastUpdated *time.Time
 	for rows.Next() {
-		var m Memo
-		if err := rows.Scan(&m.ID, &m.UID, &m.UserID, &m.Content, &m.CreatedAt, &m.UpdatedAt); err != nil {
+		var s Sana
+		if err := rows.Scan(&s.ID, &s.UID, &s.UserID, &s.Content, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			continue
 		}
-		memos = append(memos, m.ToResponse())
-		lastUpdated = &m.UpdatedAt
+		sanas = append(sanas, s.ToResponse())
+		lastUpdated = &s.UpdatedAt
 	}
 
 	response := map[string]interface{}{
-		"memos": memos,
+		"sanas": sanas,
 	}
 	if lastUpdated != nil {
 		response["next_cursor"] = lastUpdated.Unix()
-		response["has_more"] = len(memos) == limit
+		response["has_more"] = len(sanas) == limit
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// handleCreateMemo handles POST /api/memos
+// handleCreateMemo handles POST /api/sanas
 func handleCreateMemo(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 
@@ -91,8 +91,8 @@ func handleCreateMemo(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 
 	var id int
-	err := db.QueryRow(memoCtx, `
-		INSERT INTO memos (uid, user_id, content, created_at, updated_at)
+	err := db.QueryRow(sanaCtx, `
+		INSERT INTO sanas (uid, user_id, content, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 	`, uid, userID, req.Content, now, now).Scan(&id)
@@ -101,7 +101,7 @@ func handleCreateMemo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	memo := Memo{
+	memo := Sana{
 		ID:        id,
 		UID:       uid,
 		UserID:    userID,
@@ -115,29 +115,29 @@ func handleCreateMemo(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(memo.ToResponse())
 }
 
-// handleGetMemo handles GET /api/memos/:id
+// handleGetMemo handles GET /api/sanas/:id
 func handleGetMemo(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
-	uid := strings.TrimPrefix(r.URL.Path, "/api/memos/")
+	uid := strings.TrimPrefix(r.URL.Path, "/api/sanas/")
 
-	var m Memo
-	err := db.QueryRow(memoCtx, `
+	var s Sana
+	err := db.QueryRow(sanaCtx, `
 		SELECT id, uid, user_id, content, created_at, updated_at
-		FROM memos WHERE uid = $1 AND user_id = $2
-	`, uid, userID).Scan(&m.ID, &m.UID, &m.UserID, &m.Content, &m.CreatedAt, &m.UpdatedAt)
+		FROM sanas WHERE uid = $1 AND user_id = $2
+	`, uid, userID).Scan(&s.ID, &s.UID, &s.UserID, &s.Content, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(m.ToResponse())
+	json.NewEncoder(w).Encode(s.ToResponse())
 }
 
-// handleUpdateMemo handles PUT /api/memos/:id
+// handleUpdateMemo handles PUT /api/sanas/:id
 func handleUpdateMemo(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
-	uid := strings.TrimPrefix(r.URL.Path, "/api/memos/")
+	uid := strings.TrimPrefix(r.URL.Path, "/api/sanas/")
 
 	var req struct {
 		Content string `json:"content"`
@@ -153,8 +153,8 @@ func handleUpdateMemo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	result, err := db.Exec(memoCtx, `
-		UPDATE memos SET content = $1, updated_at = $2
+	result, err := db.Exec(sanaCtx, `
+		UPDATE sanas SET content = $1, updated_at = $2
 		WHERE uid = $3 AND user_id = $4
 	`, req.Content, now, uid, userID)
 	if err != nil {
@@ -175,12 +175,12 @@ func handleUpdateMemo(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleDeleteMemo handles DELETE /api/memos/:id
+// handleDeleteMemo handles DELETE /api/sanas/:id
 func handleDeleteMemo(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
-	uid := strings.TrimPrefix(r.URL.Path, "/api/memos/")
+	uid := strings.TrimPrefix(r.URL.Path, "/api/sanas/")
 
-	result, err := db.Exec(memoCtx, `DELETE FROM memos WHERE uid = $1 AND user_id = $2`, uid, userID)
+	result, err := db.Exec(sanaCtx, `DELETE FROM sanas WHERE uid = $1 AND user_id = $2`, uid, userID)
 	if err != nil {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
@@ -194,25 +194,25 @@ func handleDeleteMemo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// handleGetStats handles GET /api/memos/stats
+// handleGetStats handles GET /api/sanas/stats
 func handleGetStats(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 
 	var memoCount int
 	db.QueryRow(r.Context(),
-		"SELECT COUNT(*) FROM memos WHERE user_id = $1", userID).Scan(&memoCount)
+		"SELECT COUNT(*) FROM sanas WHERE user_id = $1", userID).Scan(&memoCount)
 
 	var activeDays int
 	db.QueryRow(r.Context(),
-		"SELECT COUNT(DISTINCT DATE(created_at)) FROM memos WHERE user_id = $1", userID).Scan(&activeDays)
+		"SELECT COUNT(DISTINCT DATE(created_at)) FROM sanas WHERE user_id = $1", userID).Scan(&activeDays)
 
 	var totalChars int
 	db.QueryRow(r.Context(),
-		"SELECT COALESCE(SUM(LENGTH(content)), 0) FROM memos WHERE user_id = $1", userID).Scan(&totalChars)
+		"SELECT COALESCE(SUM(LENGTH(content)), 0) FROM sanas WHERE user_id = $1", userID).Scan(&totalChars)
 
 	rows, _ := db.Query(r.Context(), `
 		SELECT DATE(created_at)::text as day, COUNT(*) as count
-		FROM memos
+		FROM sanas
 		WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '90 days'
 		GROUP BY DATE(created_at)
 	`, userID)

@@ -23,7 +23,7 @@
           <div v-else-if="results.length > 0" class="search-count">
             搜索结果 ({{ results.length }})
           </div>
-          <MemoCard
+          <SanaCard
             v-for="memo in results"
             :key="memo.id"
             :memo="memo"
@@ -37,7 +37,7 @@
 
 <script setup>
 import { ref, watch, nextTick } from 'vue'
-import MemoCard from './MemoCard.vue'
+import SanaCard from './SanaCard.vue'
 import api from '../api/index.js'
 
 const props = defineProps(['show'])
@@ -72,7 +72,7 @@ function debouncedSearch() {
 async function doSearch() {
   try {
     const data = await api.searchMemos(query.value.trim())
-    results.value = data.memos || []
+    results.value = data.sanas || []
   } catch {
     results.value = []
   } finally {
