@@ -206,6 +206,10 @@ func handleGetStats(w http.ResponseWriter, r *http.Request) {
 	db.QueryRow(r.Context(),
 		"SELECT COUNT(DISTINCT DATE(created_at)) FROM memos WHERE user_id = $1", userID).Scan(&activeDays)
 
+	var totalChars int
+	db.QueryRow(r.Context(),
+		"SELECT COALESCE(SUM(LENGTH(content)), 0) FROM memos WHERE user_id = $1", userID).Scan(&totalChars)
+
 	rows, _ := db.Query(r.Context(), `
 		SELECT DATE(created_at)::text as day, COUNT(*) as count
 		FROM memos
@@ -225,6 +229,7 @@ func handleGetStats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"memo_count":  memoCount,
 		"active_days": activeDays,
+		"total_chars": totalChars,
 		"heatmap":     heatmap,
 	})
 }
