@@ -72,7 +72,7 @@ function debouncedSearch() {
 async function doSearch() {
   try {
     const data = await api.searchMemos(query.value.trim())
-    results.value = data.memos || []
+    results.value = data.sanas || []
   } catch {
     results.value = []
   } finally {

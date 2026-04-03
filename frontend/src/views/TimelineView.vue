@@ -97,9 +97,9 @@ async function loadMemos(append = false) {
   try {
     const data = await api.listMemos(append ? cursor.value : null)
     if (append) {
-      memos.value = [...memos.value, ...(data.memos || [])]
+      memos.value = [...memos.value, ...(data.sanas || [])]
     } else {
-      memos.value = data.memos || []
+      memos.value = data.sanas || []
     }
     cursor.value = data.next_cursor
     hasMore.value = data.has_more
