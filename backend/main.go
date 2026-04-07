@@ -116,13 +116,13 @@ func initDefaultUser() {
 	// Create user in database if not exists
 	ctx := context.Background()
 	var exists bool
-	err = db.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)", defaultUserID).Scan(&exists)
+	err = db.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)", defaultUserID).Scan(&exists)
 	if err != nil {
 		log.Fatalf("Failed to check user: %v", err)
 	}
 
 	if !exists {
-		_, err = db.Exec(ctx, `
+		_, err = db.ExecContext(ctx, `
 			INSERT INTO users (id, username, password_hash, created_at)
 			VALUES ($1, $2, $3, $4)
 		`, defaultUserID, "admin", string(hash), time.Now())
@@ -135,7 +135,7 @@ func initDefaultUser() {
 func checkPassword(password string) bool {
 	ctx := context.Background()
 	var storedHash string
-	err := db.QueryRow(ctx, "SELECT password_hash FROM users WHERE id = $1", defaultUserID).Scan(&storedHash)
+	err := db.QueryRowContext(ctx, "SELECT password_hash FROM users WHERE id = $1", defaultUserID).Scan(&storedHash)
 	if err != nil {
 		return false
 	}

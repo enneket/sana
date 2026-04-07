@@ -109,7 +109,7 @@ func handleImportMemos(w http.ResponseWriter, r *http.Request) {
 			updatedTs = now
 		}
 
-		_, err := db.Exec(importCtx, `
+		_, err := db.ExecContext(importCtx, `
 			INSERT INTO sanas (uid, user_id, content, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5)
 			ON CONFLICT (uid) DO UPDATE SET content = EXCLUDED.content, updated_at = EXCLUDED.updated_at

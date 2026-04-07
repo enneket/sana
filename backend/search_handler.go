@@ -18,7 +18,7 @@ func handleSearchMemos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-	rows, err := db.Query(ctx, `
+	rows, err := db.QueryContext(ctx, `
 		SELECT id, uid, user_id, content, created_at, updated_at
 		FROM sanas
 		WHERE user_id = $1 AND content ILIKE '%' || $2 || '%'

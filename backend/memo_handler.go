@@ -34,7 +34,7 @@ func handleListMemos(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var rows, err = db.Query(sanaCtx, `
+	var rows, err = db.QueryContext(sanaCtx, `
 		SELECT id, uid, user_id, content, created_at, updated_at
 		FROM sanas
 		WHERE user_id = $1 AND ($2 OR updated_at < $3)
@@ -91,7 +91,7 @@ func handleCreateMemo(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
 
 	var id int
-	err := db.QueryRow(sanaCtx, `
+	err := db.QueryRowContext(sanaCtx, `
 		INSERT INTO sanas (uid, user_id, content, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
@@ -121,7 +121,7 @@ func handleGetMemo(w http.ResponseWriter, r *http.Request) {
 	uid := strings.TrimPrefix(r.URL.Path, "/api/sanas/")
 
 	var s Sana
-	err := db.QueryRow(sanaCtx, `
+	err := db.QueryRowContext(sanaCtx, `
 		SELECT id, uid, user_id, content, created_at, updated_at
 		FROM sanas WHERE uid = $1 AND user_id = $2
 	`, uid, userID).Scan(&s.ID, &s.UID, &s.UserID, &s.Content, &s.CreatedAt, &s.UpdatedAt)
@@ -153,7 +153,7 @@ func handleUpdateMemo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	result, err := db.Exec(sanaCtx, `
+	result, err := db.ExecContext(sanaCtx, `
 		UPDATE sanas SET content = $1, updated_at = $2
 		WHERE uid = $3 AND user_id = $4
 	`, req.Content, now, uid, userID)
@@ -162,7 +162,8 @@ func handleUpdateMemo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if result.RowsAffected() == 0 {
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
@@ -180,13 +181,14 @@ func handleDeleteMemo(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 	uid := strings.TrimPrefix(r.URL.Path, "/api/sanas/")
 
-	result, err := db.Exec(sanaCtx, `DELETE FROM sanas WHERE uid = $1 AND user_id = $2`, uid, userID)
+	result, err := db.ExecContext(sanaCtx, `DELETE FROM sanas WHERE uid = $1 AND user_id = $2`, uid, userID)
 	if err != nil {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
 
-	if result.RowsAffected() == 0 {
+	rowsAffected, err := result.RowsAffected()
+	if err != nil || rowsAffected == 0 {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
@@ -199,18 +201,18 @@ func handleGetStats(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 
 	var memoCount int
-	db.QueryRow(r.Context(),
+	db.QueryRowContext(r.Context(),
 		"SELECT COUNT(*) FROM sanas WHERE user_id = $1", userID).Scan(&memoCount)
 
 	var activeDays int
-	db.QueryRow(r.Context(),
+	db.QueryRowContext(r.Context(),
 		"SELECT COUNT(DISTINCT DATE(created_at)) FROM sanas WHERE user_id = $1", userID).Scan(&activeDays)
 
 	var totalChars int
-	db.QueryRow(r.Context(),
+	db.QueryRowContext(r.Context(),
 		"SELECT COALESCE(SUM(LENGTH(content)), 0) FROM sanas WHERE user_id = $1", userID).Scan(&totalChars)
 
-	rows, _ := db.Query(r.Context(), `
+	rows, _ := db.QueryContext(r.Context(), `
 		SELECT DATE(created_at)::text as day, COUNT(*) as count
 		FROM sanas
 		WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '90 days'
