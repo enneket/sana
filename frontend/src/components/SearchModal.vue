@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div v-if="show" class="search-overlay" @click.self="$emit('close')">
+    <div v-if="show" class="search-overlay" @click.self="$emit('close')" @keydown.esc="$emit('close')" tabindex="-1">
       <div class="search-modal">
         <div class="search-header">
           <span>搜索</span>
@@ -85,23 +85,38 @@ async function doSearch() {
 .search-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(61, 56, 48, 0.3);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding-top: 100px;
   z-index: 2000;
+  border-radius: 20px;
+  animation: overlay-in 200ms ease-out;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .search-modal {
   background: white;
-  border-radius: 12px;
+  border-radius: 20px;
   width: 90%;
   max-width: 560px;
   max-height: 70vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 8px 32px rgba(61,56,48,0.12);
+  animation: modal-scale-in 200ms ease-out;
 }
 
 .search-header {
