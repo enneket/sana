@@ -37,6 +37,14 @@
       @close="editingMemo = null"
       @save="saveMemo"
     />
+
+    <input
+      ref="fileInput"
+      type="file"
+      accept=".zip"
+      style="display:none"
+      @change="handleImport"
+    />
   </div>
 </template>
 
