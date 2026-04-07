@@ -182,17 +182,24 @@ function formatTime(ts) {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 
-.memo-content a::before {
-  content: '↗';
-  font-size: 0.85em;
-  opacity: 0.7;
+.memo-content a::after {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b8860b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/%3E%3Cpath d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/%3E%3C/svg%3E") no-repeat center;
+  background-size: contain;
+  opacity: 0.6;
 }
 
 .memo-content a:hover {
-  text-decoration: underline;
   color: #d4a017;
+}
+
+.memo-content a:hover::after {
+  opacity: 1;
 }
 </style>
