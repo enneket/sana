@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import SanaComposer from '../components/SanaComposer.vue'
 import SanaCard from '../components/SanaCard.vue'
 import SanaEditor from '../components/SanaEditor.vue'
@@ -58,6 +58,8 @@ import SearchModal from '../components/SearchModal.vue'
 import api from '../api/index.js'
 
 const memos = ref([])
+const toast = inject('toast')
+const confirmDialog = inject('confirm')
 const loading = ref(false)
 const error = ref(null)
 const cursor = ref(null)
@@ -151,7 +153,8 @@ async function saveMemo({ id, content }) {
 }
 
 async function deleteMemo(id) {
-  if (!confirm('确定删除这条笔记？')) return
+  const ok = await confirmDialog({ title: '删除笔记', message: '确定删除这条笔记？', danger: true })
+  if (!ok) return
   await api.deleteMemo(id)
   memos.value = memos.value.filter(m => m.id !== id)
 }
@@ -171,7 +174,7 @@ async function handleExport() {
     a.click()
     URL.revokeObjectURL(url)
   } catch (e) {
-    alert('导出失败')
+    toast('导出失败', 'error')
   }
 }
 
@@ -182,10 +185,10 @@ async function handleImport(e) {
   formData.append('file', file)
   try {
     const result = await api.importMemos(formData)
-    alert(`导入完成：${result.sanas_imported ?? result.memos_imported ?? 0} 条笔记`)
+    toast(`导入完成：${result.sanas_imported ?? result.memos_imported ?? 0} 条笔记`, 'success')
     await loadMemos()
   } catch (e) {
-    alert('导入失败')
+    toast('导入失败', 'error')
   }
   e.target.value = ''
 }
