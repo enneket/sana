@@ -38,22 +38,37 @@ function save() {
 </script>
 
 <style scoped>
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .editor-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(61, 56, 48, 0.3);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: overlay-in 200ms ease-out;
+  border-radius: 20px;
 }
 
 .editor-modal {
   background: white;
-  border-radius: 12px;
+  border-radius: 20px;
   width: 90%;
   max-width: 600px;
   overflow: hidden;
+  animation: modal-scale-in 200ms ease-out;
+  box-shadow: 0 8px 32px rgba(61,56,48,0.12);
 }
 
 .editor-header {
