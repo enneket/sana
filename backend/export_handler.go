@@ -12,9 +12,10 @@ import (
 // MemosExport Memos格式导出结构
 type MemosExport struct {
 	App        string           `json:"app"`
-	Version   string           `json:"version"`
-	ExportedAt string          `json:"exported_at"`
-	Memos     []MemoExportItem `json:"sanas"`
+	Version    string           `json:"version"`
+	ExportedAt string           `json:"exported_at"`
+	Memos      []MemoExportItem `json:"memos"`
+	Sanas      []MemoExportItem `json:"sanas,omitempty"`
 }
 
 // MemoExportItem 单条导出项

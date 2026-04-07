@@ -182,7 +182,7 @@ async function handleImport(e) {
   formData.append('file', file)
   try {
     const result = await api.importMemos(formData)
-    alert(`导入完成：${result.memos_imported} 条笔记`)
+    alert(`导入完成：${result.sanas_imported ?? result.memos_imported ?? 0} 条笔记`)
     await loadMemos()
   } catch (e) {
     alert('导入失败')
