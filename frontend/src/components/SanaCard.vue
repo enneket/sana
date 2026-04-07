@@ -75,25 +75,6 @@ function formatTime(ts) {
   margin: 8px 0;
 }
 
-.memo-content a {
-  color: #b8860b;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.memo-content a::before {
-  content: '↗';
-  font-size: 0.85em;
-  opacity: 0.7;
-}
-
-.memo-content a:hover {
-  text-decoration: underline;
-  color: #d4a017;
-}
-
 .memo-content code {
   background: #f5f5f5;
   padding: 2px 6px;
@@ -192,5 +173,26 @@ function formatTime(ts) {
 .action-btn.delete:hover {
   background: #fee;
   color: #e74c3c;
+}
+</style>
+
+<style>
+.memo-content a {
+  color: #b8860b;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.memo-content a::before {
+  content: '↗';
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.memo-content a:hover {
+  text-decoration: underline;
+  color: #d4a017;
 }
 </style>
