@@ -202,21 +202,21 @@ func handleGetStats(w http.ResponseWriter, r *http.Request) {
 
 	var memoCount int
 	db.QueryRowContext(r.Context(),
-		"SELECT COUNT(*) FROM sanas WHERE user_id = $1", userID).Scan(&memoCount)
+		"SELECT COUNT(*) FROM sanas WHERE user_id = ?", userID).Scan(&memoCount)
 
 	var activeDays int
 	db.QueryRowContext(r.Context(),
-		"SELECT COUNT(DISTINCT DATE(created_at)) FROM sanas WHERE user_id = $1", userID).Scan(&activeDays)
+		"SELECT COUNT(DISTINCT DATE(created_at)) FROM sanas WHERE user_id = ?", userID).Scan(&activeDays)
 
 	var totalChars int
 	db.QueryRowContext(r.Context(),
-		"SELECT COALESCE(SUM(LENGTH(content)), 0) FROM sanas WHERE user_id = $1", userID).Scan(&totalChars)
+		"SELECT COALESCE(SUM(LENGTH(content)), 0) FROM sanas WHERE user_id = ?", userID).Scan(&totalChars)
 
 	rows, _ := db.QueryContext(r.Context(), `
-		SELECT DATE(created_at)::text as day, COUNT(*) as count
+		SELECT strftime('%Y-%m-%d', created_at) as day, COUNT(*) as count
 		FROM sanas
-		WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '90 days'
-		GROUP BY DATE(created_at)
+		WHERE user_id = ? AND created_at >= datetime('now', '-90 days')
+		GROUP BY day
 	`, userID)
 
 	heatmap := make(map[string]int)
