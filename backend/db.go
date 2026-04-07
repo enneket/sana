@@ -1,29 +1,29 @@
 package main
 
 import (
-	"context"
+	"database/sql"
 	"log"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	_ "modernc.org/sqlite"
 )
 
-var db *pgxpool.Pool
+var db *sql.DB
 
 func initDB() {
-	databaseURL := getEnv("DATABASE_URL", "")
-	if databaseURL == "" {
-		log.Fatal("DATABASE_URL environment variable must be set")
+	sqlitePath := getEnv("SQLITE_PATH", "/data/sana.db")
+	if sqlitePath == "" {
+		log.Fatal("SQLITE_PATH environment variable must be set")
 	}
 
 	var err error
-	db, err = pgxpool.New(context.Background(), databaseURL)
+	db, err = sql.Open("sqlite", sqlitePath)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v", err)
 	}
 
 	// Test connection
-	if err := db.Ping(context.Background()); err != nil {
+	if err := db.Ping(); err != nil {
 		log.Fatalf("Unable to ping database: %v", err)
 	}
 
@@ -41,23 +41,22 @@ func createSchema() error {
 		id TEXT PRIMARY KEY,
 		username TEXT UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
-		created_at TIMESTAMPTZ DEFAULT NOW()
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
 	CREATE TABLE IF NOT EXISTS sanas (
-		id SERIAL PRIMARY KEY,
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		uid TEXT UNIQUE NOT NULL,
-		user_id TEXT NOT NULL REFERENCES users(id),
+		user_id TEXT NOT NULL,
 		content TEXT NOT NULL,
-		created_at TIMESTAMPTZ DEFAULT NOW(),
-		updated_at TIMESTAMPTZ DEFAULT NOW()
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_sanas_user_id ON sanas(user_id);
 	CREATE INDEX IF NOT EXISTS idx_sanas_updated_at ON sanas(updated_at DESC);
-	CREATE INDEX IF NOT EXISTS idx_sanas_content_gin ON sanas USING gin(to_tsvector('simple', content));
 	`
-	_, err := db.Exec(context.Background(), schema)
+	_, err := db.Exec(schema)
 	return err
 }
 

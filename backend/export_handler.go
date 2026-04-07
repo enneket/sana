@@ -31,7 +31,7 @@ func handleExportMemos(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(string)
 
 	ctx := context.Background()
-	rows, err := db.Query(ctx, `
+	rows, err := db.QueryContext(ctx, `
 		SELECT uid, content, created_at, updated_at
 		FROM sanas WHERE user_id = $1 ORDER BY created_at DESC
 	`, userID)
