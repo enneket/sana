@@ -1,5 +1,6 @@
 # Stage 1: builder
 FROM golang:1.25-alpine AS builder
+ENV GOTOOLCHAIN=auto
 WORKDIR /build
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
