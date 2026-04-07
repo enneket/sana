@@ -10,10 +10,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o sana .
 # Stage 2: Frontend builder
 FROM node:24-alpine AS frontend-builder
 WORKDIR /frontend
-COPY frontend/package.json frontend/bun.lock* ./
-RUN npm install -g bun && bun install --frozen-lockfile
+COPY frontend/package.json ./
+RUN npm install
 COPY frontend/ ./
-RUN bun run build
+RUN npm run build
 
 # Stage 3: Runtime
 FROM debian:stable-slim
