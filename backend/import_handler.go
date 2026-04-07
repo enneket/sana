@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -21,9 +22,10 @@ type ImportResult struct {
 }
 
 type MemosImportFormat struct {
-	App    string           `json:"app"`
-	Version string          `json:"version"`
-	Memos  []MemoExportItem `json:"sanas"`
+	App     string           `json:"app"`
+	Version string           `json:"version"`
+	Memos   []MemoExportItem `json:"memos"`
+	Sanas   []MemoExportItem `json:"sanas,omitempty"`
 }
 
 func handleImportMemos(w http.ResponseWriter, r *http.Request) {
@@ -42,9 +44,20 @@ func handleImportMemos(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	zr, err := zip.NewReader(file, maxBytes)
+	// Read entire file into memory, then use bytes.Reader for seeking
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "invalid zip file", http.StatusBadRequest)
+		http.Error(w, "failed to read file", http.StatusInternalServerError)
+		return
+	}
+	if len(fileBytes) < 4 || fileBytes[0] != 0x50 || fileBytes[1] != 0x4B {
+		http.Error(w, "not a valid zip file", http.StatusBadRequest)
+		return
+	}
+
+	zr, err := zip.NewReader(bytes.NewReader(fileBytes), int64(len(fileBytes)))
+	if err != nil {
+		http.Error(w, fmt.Sprintf("invalid zip: %v", err), http.StatusBadRequest)
 		return
 	}
 
