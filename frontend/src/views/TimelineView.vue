@@ -150,6 +150,7 @@ async function saveMemo({ id, content }) {
     memos.value[idx] = { ...memos.value[idx], content }
   }
   editingMemo.value = null
+  emit('created')
 }
 
 async function deleteMemo(id) {
@@ -157,6 +158,7 @@ async function deleteMemo(id) {
   if (!ok) return
   await api.deleteMemo(id)
   memos.value = memos.value.filter(m => m.id !== id)
+  emit('created')
 }
 
 function onSearchSelect(memo) {
@@ -187,6 +189,7 @@ async function handleImport(e) {
     const result = await api.importMemos(formData)
     toast(`导入完成：${result.sanas_imported ?? result.memos_imported ?? 0} 条笔记`, 'success')
     await loadMemos()
+    emit('created')
   } catch (e) {
     toast('导入失败', 'error')
   }
