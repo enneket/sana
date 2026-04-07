@@ -76,12 +76,22 @@ function formatTime(ts) {
 }
 
 .memo-content a {
-  color: #2ecc71;
+  color: #b8860b;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.memo-content a::before {
+  content: '↗';
+  font-size: 0.85em;
+  opacity: 0.7;
 }
 
 .memo-content a:hover {
   text-decoration: underline;
+  color: #d4a017;
 }
 
 .memo-content code {
