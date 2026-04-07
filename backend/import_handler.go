@@ -25,7 +25,7 @@ type MemosImportFormat struct {
 	App     string           `json:"app"`
 	Version string           `json:"version"`
 	Memos   []MemoExportItem `json:"memos"`
-	Sanas   []MemoExportItem `json:"sanas,omitempty"`
+	Sanas   []MemoExportItem `json:"sanas"`
 }
 
 func handleImportMemos(w http.ResponseWriter, r *http.Request) {
@@ -98,7 +98,12 @@ func handleImportMemos(w http.ResponseWriter, r *http.Request) {
 	result := ImportResult{MemosImported: 0}
 	now := time.Now()
 
-	for _, m := range sanasJSON.Memos {
+	items := sanasJSON.Sanas
+	if len(items) == 0 {
+		items = sanasJSON.Memos
+	}
+
+	for _, m := range items {
 		content := m.Content
 		if content == "" {
 			content, _ = contentMap[m.UID]
