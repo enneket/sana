@@ -4,14 +4,19 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import api from './api/index.js'
+
+const router = useRouter()
+const route = useRoute()
 
 onMounted(async () => {
   try {
     await api.me()
-  } catch {
-    // 401 triggers window.location.href='/login' inside handleResponse
-    // network error or other: stay on current page
+  } catch (e) {
+    if (e.message === 'unauthorized' && route.path !== '/login') {
+      router.push('/login')
+    }
   }
 })
 </script>

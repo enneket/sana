@@ -16,7 +16,6 @@ function fetchWithAuth(url, options = {}) {
 async function handleResponse(r) {
   if (r.status === 401) {
     localStorage.removeItem('token')
-    window.location.href = '/login'
     throw new Error('unauthorized')
   }
   if (r.status === 204) return null
