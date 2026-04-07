@@ -206,16 +206,16 @@ func handleGetStats(w http.ResponseWriter, r *http.Request) {
 
 	var activeDays int
 	db.QueryRowContext(r.Context(),
-		"SELECT COUNT(DISTINCT date(datetime(created_at))) FROM sanas WHERE user_id = ?", userID).Scan(&activeDays)
+		"SELECT COUNT(DISTINCT substr(created_at, 1, 10)) FROM sanas WHERE user_id = ?", userID).Scan(&activeDays)
 
 	var totalChars int
 	db.QueryRowContext(r.Context(),
 		"SELECT COALESCE(SUM(LENGTH(content)), 0) FROM sanas WHERE user_id = ?", userID).Scan(&totalChars)
 
 	rows, _ := db.QueryContext(r.Context(), `
-		SELECT date(datetime(created_at)) as day, COUNT(*) as count
+		SELECT substr(created_at, 1, 10) as day, COUNT(*) as count
 		FROM sanas
-		WHERE user_id = ? AND datetime(created_at) >= datetime('now', '-90 days')
+		WHERE user_id = ? AND datetime(substr(created_at, 1, 19)) >= datetime('now', '-90 days')
 		GROUP BY day
 	`, userID)
 
