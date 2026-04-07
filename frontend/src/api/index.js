@@ -13,13 +13,17 @@ function fetchWithAuth(url, options = {}) {
   return fetch(url, { ...options, headers })
 }
 
-function handleResponse(r) {
+async function handleResponse(r) {
   if (r.status === 401) {
     localStorage.removeItem('token')
     window.location.href = '/login'
     throw new Error('unauthorized')
   }
   if (r.status === 204) return null
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ error: 'request failed' }))
+    throw new Error(err.error || `HTTP ${r.status}`)
+  }
   return r.json()
 }
 

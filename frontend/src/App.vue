@@ -12,8 +12,11 @@ const router = useRouter()
 onMounted(async () => {
   try {
     await api.me()
-  } catch {
-    router.push('/login')
+  } catch (e) {
+    if (e.message === 'unauthorized') {
+      router.push('/login')
+    }
+    // network error or other: stay on current page, don't redirect
   }
 })
 </script>
