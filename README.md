@@ -13,7 +13,7 @@
 
 ## 技术栈
 
-- 后端：Go + PostgreSQL + JWT
+- 后端：Go + SQLite + JWT
 - 前端：Vue 3 + Vite
 
 ## 快速部署
@@ -23,27 +23,12 @@
 ```bash
 git clone https://github.com/enneket/sana.git
 cd sana/docker
-
-JWT_SECRET=your-secret SANA_PASSWORD=your-password docker compose up -d
+cp .env.example .env
+# 编辑 .env，填入 JWT_SECRET 和 SANA_PASSWORD
+docker compose up -d
 ```
 
-访问 `http://localhost:8080`，使用 `SANA_PASSWORD` 设置的密码登录。
-
-### 手动运行
-
-```bash
-# 安装 PostgreSQL 并创建数据库
-
-# 后端
-cd backend
-go build -o sana .
-DATABASE_URL=postgres://user:pass@localhost:5432/sana SANA_PASSWORD=你的密码 JWT_SECRET=随机密钥 ./sana
-
-# 前端
-cd frontend
-npm install
-npm run dev
-```
+访问 `http://localhost:5560`，使用 `SANA_PASSWORD` 设置的密码登录。
 
 ## 环境变量
 
@@ -51,37 +36,32 @@ npm run dev
 |------|------|--------|
 | `SANA_PASSWORD` | 登录密码 | **必须设置** |
 | `JWT_SECRET` | JWT 签名密钥 | **必须设置** |
-| `DATABASE_URL` | PostgreSQL 连接串 | **必须设置** |
 | `PORT` | 服务端口 | `8080` |
+| `SQLITE_PATH` | 数据库路径 | `/data/sana.db` |
 
 ## 数据存储
 
-PostgreSQL 数据库存储所有笔记数据。启动时自动创建表结构。
+SQLite 数据库存储在 `/data/sana.db`（docker-compose 中挂载为 `sana_data` 目录）。
 
 ## 项目结构
 
 ```
 sana/
 ├── backend/          # Go 后端
-│   ├── main.go       # 入口
-│   ├── db.go         # PostgreSQL 连接
-│   ├── memo_handler.go     # Memo CRUD API
-│   ├── search_handler.go   # 搜索 API
-│   ├── export_handler.go   # 导出
-│   └── import_handler.go  # 导入
 ├── frontend/         # Vue 3 前端
 │   └── src/
 │       ├── views/
 │       │   ├── TimelineView.vue  # 主界面
 │       │   └── Login.vue         # 登录页
 │       └── components/
-│           ├── MemoComposer.vue   # 快速创建
-│           ├── MemoCard.vue      # 笔记卡片
-│           ├── MemoEditor.vue    # 编辑弹窗
+│           ├── SanaComposer.vue  # 快速创建
+│           ├── SanaCard.vue      # 笔记卡片
+│           ├── SanaEditor.vue    # 编辑弹窗
 │           └── TimeGroup.vue     # 日期分组
 ├── docker/          # Docker 部署
 │   ├── Dockerfile
-│   └── docker-compose.yml
+│   ├── docker-compose.yml
+│   └── .env.example
 └── docs/            # 设计文档
 ```
 
