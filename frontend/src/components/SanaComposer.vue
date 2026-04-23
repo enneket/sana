@@ -8,7 +8,7 @@
       @keydown.enter.ctrl="submit"
     ></textarea>
     <div class="composer-footer">
-      <button class="composer-btn" @click="submit" :disabled="!content.trim()">
+      <button class="composer-btn" :class="{ active: hasContent }" @click="submit" :disabled="!hasContent">
         发送
       </button>
     </div>
@@ -16,11 +16,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import api from '../api/index.js'
 
 const emit = defineEmits(['created'])
 const content = ref('')
+const hasContent = computed(() => content.value.trim().length > 0)
 
 async function submit() {
   const c = content.value.trim()
@@ -88,5 +89,10 @@ async function submit() {
   background: #f0f0f0;
   color: #ccc;
   cursor: not-allowed;
+}
+
+.composer-btn.active {
+  background: #2ecc71;
+  color: white;
 }
 </style>
